@@ -1,12 +1,12 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-df = pd.read_excel('dataset/Calmette_data.xlsx')
+df = pd.read_excel('Calmette_data_v2.xlsx')
 
 # df = df.applymap(lambda x: x.replace('\u200b', '') if isinstance(x, str) else x)
 df = df.replace(to_replace='\u200b', value='', regex=True)
 
-df = df.drop(columns=["Unnamed: 0", "Hopital", "IDLabo", "IDPatient", "visittype"])
+df = df.drop(columns=["Hopital", "IDLabo", "IDPatient", "visittype"])
 df = df.rename(columns={"new_age": "age"})
 # Convert column names to lowercase
 df.columns = df.columns.str.lower()
