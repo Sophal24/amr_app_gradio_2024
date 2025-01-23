@@ -7,3 +7,6 @@ numpy==1.26.4
 fastapi==0.70.0
 pandas==1.4.0
 uvicorn==0.15.0
+PyJWT
+pymongo
+bcrypt

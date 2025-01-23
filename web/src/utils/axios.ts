@@ -4,7 +4,17 @@ import { HOST_API } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
-const axiosInstance = axios.create({ baseURL: HOST_API });
+const token = document.cookie
+  .split('; ')
+  .find((row) => row.startsWith('token='))
+  ?.split('=')[1];
+
+const axiosInstance = axios.create({
+  baseURL: HOST_API,
+  headers: {
+    Authorization: token ? `Bearer ${token}` : '',
+  },
+});
 
 axiosInstance.interceptors.response.use(
   (res) => res,

@@ -1,4 +1,5 @@
 import { Navigate, useRoutes } from 'react-router-dom';
+import Guard from 'src/layouts/Guard';
 // config
 //
 
@@ -10,7 +11,11 @@ export default function Router() {
   return useRoutes([
     {
       path: '/',
-      element: <HomePage />,
+      element: (
+        <Guard>
+          <HomePage />
+        </Guard>
+      ),
     },
 
     // No match 404

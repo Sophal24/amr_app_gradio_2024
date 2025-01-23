@@ -1,0 +1,32 @@
+
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    networks:
+      - amr
+  
+  amr:
+    container_name: amr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/amr
+      - PORT=8000
+      - DEBUG=True
+    depends_on:
+      - mongo
+    networks:
+      - amr
+    
+networks:
+  amr:
+    driver: bridge

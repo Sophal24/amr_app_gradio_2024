@@ -3,9 +3,13 @@ import joblib
 import pandas as pd
 from utils2 import set_label_encoding
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from database import create_activity, seed_users, verify_user
+import jwt
+from fastapi import Request, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 target_labels = [
     "Amoxicilline",
@@ -468,36 +472,6 @@ options = {
     ],
 }
 
-
-def get_db_connection():
-    return sqlite3.connect("user_inputs.db")
-
-def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS user_inputs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            age TEXT,
-            sex TEXT,
-            address TEXT,
-            ward_en TEXT,
-            service_type TEXT,
-            date TEXT,
-            prelevement_type TEXT,
-            germe TEXT,
-            contamination TEXT,
-            direct_2 TEXT,
-            culture_3 TEXT,
-            genre_4 TEXT,
-            species_training_5 TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
 app = FastAPI()
 
 app.add_middleware(
@@ -508,6 +482,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class JWTBearer(HTTPBearer):
+    def __init__(self, auto_error: bool = True):
+        super(JWTBearer, self).__init__(auto_error=auto_error)
+
+    async def __call__(self, request: Request):
+        if request.url.path.startswith("/api") and request.url.path != "/api/login":
+            credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+            if credentials:
+                if not self.verify_jwt(credentials.credentials):
+                    raise HTTPException(status_code=403, detail="Invalid token or expired token.")
+                return credentials.credentials
+            else:
+                raise HTTPException(status_code=403, detail="Invalid authorization code.")
+        return await request.app(request.scope, request.receive, request.send)
+
+    def verify_jwt(self, jwtoken: str) -> bool:
+        is_token_valid: bool = False
+
+        try:
+            payload = jwt.decode(jwtoken, "secret", algorithms=["HS256"])
+        except:
+            payload = None
+        if payload:
+            is_token_valid = True
+        return is_token_valid
+
+app.add_middleware(JWTBearer)
 
 @app.get("/api/options")
 def read_options():
@@ -515,7 +516,7 @@ def read_options():
 
 
 @app.post("/api/amr")
-def amr_api(data: dict):
+def amr_api(data: dict, token: str = Depends(JWTBearer())):
     age = data.get("age")
     sex = data.get("sex")
     address = data.get("address")
@@ -533,16 +534,12 @@ def amr_api(data: dict):
     # Convert date to timestamp
     date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
 
-    # Store user input into SQLite database
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO user_inputs (
-            age, sex, address, ward_en, service_type, date, prelevement_type, germe, contamination, direct_2, culture_3, genre_4, species_training_5
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (age, sex, address, ward_en, service_type, date, prelevement_type, germe, contamination, direct_2, culture_3, genre_4, species_training_5))
-    conn.commit()
-    conn.close()
+    # Decode the token to get the user information
+    payload = jwt.decode(token, "secret", algorithms=["HS256"])
+    user_id = payload.get("user_id")
+
+    # Store user input 
+    create_activity(user_id, data)
 
     df_info, result_probab_dict = amr_project(
         age,
@@ -562,10 +559,26 @@ def amr_api(data: dict):
 
     return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}
 
+@app.post("/api/login")
+def login(data: dict):
+    username = data.get("username")
+    password = data.get("password")
+    
+    user = verify_user(username, password)
+
+    if user:
+        token = jwt.encode({"user_id": user._id},"secret", algorithm="HS256")
+        return {"message": "Login successful", "token": token}
+    else:
+        return {"message": "Invalid Credential", "token": None}
+
 app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
 
 if __name__ == "__main__":
     import uvicorn
     import os
 
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+
+    seed_users()
+
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True if os.environ.get("DEBUG") == "True" else False)
