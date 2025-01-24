@@ -175,7 +175,7 @@ const HomePage = () => {
   const handleExport = async () => {
     const formDataSheet = XLSX.utils.json_to_sheet([formData]);
     const resultsSheet = XLSX.utils.json_to_sheet(
-      results.map((r) => ({ name: r.name, percentage: `${r.value.toFixed(0)}%` }))
+      results.map((r) => ({ name: r.name, percentage: `${Math.round(r.value)}%` }))
     );
 
     const workbook = XLSX.utils.book_new();
@@ -597,14 +597,9 @@ const HomePage = () => {
                         <LinearProgress variant="determinate" value={result.value} />
                       </Box>
                       <Box minWidth={35}>
-                        <Typography
-                          variant="body2"
-                          color={
-                            Math.round(result.value) < 40 && !result.isDefault
-                              ? 'error.main'
-                              : 'textSecondary'
-                          }
-                        >{`${Math.round(result.value)}%`}</Typography>
+                        <Typography variant="body2" color="textSecondary">{`${Math.round(
+                          result.value
+                        )}%`}</Typography>
                       </Box>
                     </Box>
                   </Box>
