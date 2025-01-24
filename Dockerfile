@@ -9,6 +9,8 @@ RUN yarn install
 
 COPY web/ ./
 
+ENV VITE_HOST_API=""
+
 RUN yarn build
 
 FROM python:3.9.13 AS base
@@ -47,10 +49,15 @@ COPY --from=web-build /web/dist /app/web/dist
 
 # Copy the source code into the container.
 COPY server.py server.py
-COPY testing_random_forest_model_v2.joblib testing_random_forest_model_v2.joblib
 COPY dataset dataset
+COPY database.py database.py
 COPY Calmette_data_v2.xlsx Calmette_data_v2.xlsx
-COPY utils2.py utils2.py
+COPY utils.py utils.py
+COPY random_forest_stage_1.joblib random_forest_stage_1.joblib
+COPY random_forest_stage_2.joblib random_forest_stage_2.joblib
+COPY random_forest_stage_3.joblib random_forest_stage_3.joblib
+COPY random_forest_stage_4.joblib random_forest_stage_4.joblib
+COPY random_forest_stage_5.joblib random_forest_stage_5.joblib
 
 # Expose the port that the application listens on.
 EXPOSE 80
@@ -58,4 +65,4 @@ EXPOSE 80
 ENV PORT=80
 
 # Run the application.
-CMD ["python", "server.py"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "80"]

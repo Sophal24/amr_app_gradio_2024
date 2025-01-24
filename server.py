@@ -5,7 +5,8 @@ from datetime import datetime
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from database import create_activity, seed_users, verify_user
+
+# from database import create_activity, get_db, seed_users, verify_user
 import jwt
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -49,45 +50,65 @@ sex_dict = set_label_encoding(df, "sex")
 address_dict = set_label_encoding(df, "address")
 ward_dict = set_label_encoding(df, "ward_en")
 service_type_dict = set_label_encoding(df, "service_type")
-prelevement_type_dict = set_label_encoding(df, "prelevement_type")
-germe_dict = set_label_encoding(df, "germe")
 espece_requete_dict = set_label_encoding(df, "espece_requete")
 direct_2_dict = set_label_encoding(df, "2_direct")
 culture_3_dict = set_label_encoding(df, "3_culture")
 genre_4_dict = set_label_encoding(df, "4_genre")
 espece_5_training_dict = set_label_encoding(df, "5_espece_training")
 contamination_dict = set_label_encoding(df, "contamination")
-sample_dict = set_label_encoding(df, 'prelevement_type')
+sample_dict = set_label_encoding(df, "prelevement_type")
 
-def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2, culture_3, genre_4, species_5):
 
+def amr_project(
+    age,
+    sex,
+    address,
+    ward_en,
+    service_type,
+    date,
+    sample,
+    direct_2,
+    culture_3,
+    genre_4,
+    species_5,
+):
     # Convert timestamp to a datetime object
     date_time = datetime.fromtimestamp(date)
     # Extract the month
     month = date_time.month
 
     # Stage 5
-    if age and sex and address and ward_en and service_type and sample and direct_2 and culture_3 and genre_4 and species_5:
-
+    if (
+        age
+        and sex
+        and address
+        and ward_en
+        and service_type
+        and sample
+        and direct_2
+        and culture_3
+        and genre_4
+        and species_5
+    ):
         # Sample data
         input_data = {
             "month": [month],
             "age": [age],
-            'sex': [sex_dict[sex]],
-            'address': [address_dict[address]],
-            'ward_en': [ward_dict[ward_en]],
-            'service_type': [service_type_dict[service_type]],
-            'sample': [sample_dict[sample]],
-            '2_direct': [direct_2_dict[direct_2]],
-            '3_culture': [culture_3_dict[culture_3]],
-            '4_genre': [genre_4_dict[genre_4]],
-            '5_species': [espece_5_training_dict[species_5]]
+            "sex": [sex_dict[sex]],
+            "address": [address_dict[address]],
+            "ward_en": [ward_dict[ward_en]],
+            "service_type": [service_type_dict[service_type]],
+            "sample": [sample_dict[sample]],
+            "2_direct": [direct_2_dict[direct_2]],
+            "3_culture": [culture_3_dict[culture_3]],
+            "4_genre": [genre_4_dict[genre_4]],
+            "5_species": [espece_5_training_dict[species_5]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
 
         # Load the model back from the file
-        rf_model_loaded = joblib.load('random_forest_stage_5.joblib')
+        rf_model_loaded = joblib.load("random_forest_stage_5.joblib")
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
@@ -103,34 +124,40 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
             result_class_dict[target_labels[i]] = message
             result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-        
         # Sample data
-        data = {
-            "Model": ["Random Forest - Stage 5"]
-        }
+        data = {"Model": ["Random Forest - Stage 5"]}
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
-
     # Stage 4
-    elif age and sex and address and ward_en and service_type and sample and direct_2 and culture_3 and genre_4:
+    elif (
+        age
+        and sex
+        and address
+        and ward_en
+        and service_type
+        and sample
+        and direct_2
+        and culture_3
+        and genre_4
+    ):
         # Sample data
         input_data = {
             "month": [month],
             "age": [age],
-            'sex': [sex_dict[sex]],
-            'address': [address_dict[address]],
-            'ward_en': [ward_dict[ward_en]],
-            'service_type': [service_type_dict[service_type]],
-            'sample': [sample_dict[sample]],
-            '2_direct': [direct_2_dict[direct_2]],
-            '3_culture': [culture_3_dict[culture_3]],
-            '4_genre': [genre_4_dict[genre_4]]
+            "sex": [sex_dict[sex]],
+            "address": [address_dict[address]],
+            "ward_en": [ward_dict[ward_en]],
+            "service_type": [service_type_dict[service_type]],
+            "sample": [sample_dict[sample]],
+            "2_direct": [direct_2_dict[direct_2]],
+            "3_culture": [culture_3_dict[culture_3]],
+            "4_genre": [genre_4_dict[genre_4]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
         # Load the model back from the file
-        rf_model_loaded = joblib.load('random_forest_stage_4.joblib')
+        rf_model_loaded = joblib.load("random_forest_stage_4.joblib")
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
@@ -146,32 +173,38 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
             result_class_dict[target_labels[i]] = message
             result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-
-         # Sample data
-        data = {
-            "Model": ["Random Forest - Stage 4"]
-        }
+        # Sample data
+        data = {"Model": ["Random Forest - Stage 4"]}
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
     # Stage 3
-    elif age and sex and address and ward_en and service_type and sample and direct_2 and culture_3:
+    elif (
+        age
+        and sex
+        and address
+        and ward_en
+        and service_type
+        and sample
+        and direct_2
+        and culture_3
+    ):
         # Sample data
         input_data = {
             "month": [month],
             "age": [age],
-            'sex': [sex_dict[sex]],
-            'address': [address_dict[address]],
-            'ward_en': [ward_dict[ward_en]],
-            'service_type': [service_type_dict[service_type]],
-            'sample': [sample_dict[sample]],
-            '2_direct': [direct_2_dict[direct_2]],
-            '3_culture': [culture_3_dict[culture_3]]
+            "sex": [sex_dict[sex]],
+            "address": [address_dict[address]],
+            "ward_en": [ward_dict[ward_en]],
+            "service_type": [service_type_dict[service_type]],
+            "sample": [sample_dict[sample]],
+            "2_direct": [direct_2_dict[direct_2]],
+            "3_culture": [culture_3_dict[culture_3]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
         # Load the model back from the file
-        rf_model_loaded = joblib.load('random_forest_stage_3.joblib')
+        rf_model_loaded = joblib.load("random_forest_stage_3.joblib")
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
@@ -187,10 +220,8 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
             result_class_dict[target_labels[i]] = message
             result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-         # Sample data
-        data = {
-            "Model": ["Random Forest - Stage 3"]
-        }
+        # Sample data
+        data = {"Model": ["Random Forest - Stage 3"]}
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
@@ -200,17 +231,17 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
         input_data = {
             "month": [month],
             "age": [age],
-            'sex': [sex_dict[sex]],
-            'address': [address_dict[address]],
-            'ward_en': [ward_dict[ward_en]],
-            'service_type': [service_type_dict[service_type]],
-            'sample': [sample_dict[sample]],
-            '2_direct': [direct_2_dict[direct_2]]
+            "sex": [sex_dict[sex]],
+            "address": [address_dict[address]],
+            "ward_en": [ward_dict[ward_en]],
+            "service_type": [service_type_dict[service_type]],
+            "sample": [sample_dict[sample]],
+            "2_direct": [direct_2_dict[direct_2]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
         # Load the model back from the file
-        rf_model_loaded = joblib.load('random_forest_stage_2.joblib')
+        rf_model_loaded = joblib.load("random_forest_stage_2.joblib")
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
@@ -226,10 +257,8 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
             result_class_dict[target_labels[i]] = message
             result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-         # Sample data
-        data = {
-            "Model": ["Random Forest -  Stage 2"]
-        }
+        # Sample data
+        data = {"Model": ["Random Forest -  Stage 2"]}
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
@@ -239,17 +268,17 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
         input_data = {
             "month": [month],
             "age": [age],
-            'sex': [sex_dict[sex]],
-            'address': [address_dict[address]],
-            'ward_en': [ward_dict[ward_en]],
-            'service_type': [service_type_dict[service_type]],
-            'sample': [sample_dict[sample]]
+            "sex": [sex_dict[sex]],
+            "address": [address_dict[address]],
+            "ward_en": [ward_dict[ward_en]],
+            "service_type": [service_type_dict[service_type]],
+            "sample": [sample_dict[sample]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
-        
+
         # Load the model back from the file
-        rf_model_loaded = joblib.load('random_forest_stage_1.joblib')
+        rf_model_loaded = joblib.load("random_forest_stage_1.joblib")
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
@@ -265,11 +294,8 @@ def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2
             result_class_dict[target_labels[i]] = message
             result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-
-         # Model used and stage information
-        data = {
-            "Model": ["Random Forest - Stage 1"]
-        }
+        # Model used and stage information
+        data = {"Model": ["Random Forest - Stage 1"]}
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
@@ -341,7 +367,7 @@ options = {
         "Rea C",
     ],
     "service_type": ["Pediatrie", "Chirurgie", "Medecine", "SAU", "Gyneco/Obs", "Rea"],
-    "prelevement_type": [
+    "sample": [
         "Collection/Abces",
         "Hemoc/KT",
         "Urine",
@@ -355,102 +381,6 @@ options = {
         "Peau",
         "Materiel",
     ],
-    "germe": [
-        "Streptococcus anginosus",
-        "Staphylococcus aureus",
-        "Enterobacter cloacae",
-        "Pantoea agglomerans",
-        "Burkholderia cepacia",
-        "Acinetobacter baumannii",
-        "Acinetobacter sp.",
-        "Stenotrophomonas maltophilia",
-        "Pseudomonas aeruginosa",
-        "Streptococcus uberis",
-        "Staphylococcus hominis",
-        "Staphylococcus epidermidis",
-        "Enterococcus faecalis",
-        "Enterobacter sakazakii",
-        "Streptococcus constellatus",
-        "Streptococcus intermedius",
-        "Staphylococcus saprophyticus",
-        "Enterococcus faecium",
-        "Klebsiella pneumoniae",
-        "Proteus mirabilis",
-        "Raoultella ornithinolytica",
-        "Candida albicans",
-        "Streptococcus agalactiae/B",
-        "Streptococcus mitis",
-        "Streptococcus acidominimus",
-        "Streptococcus gordonii",
-        "Streptococcus gallolyticus",
-        "Lactococcus garvieae",
-        "Streptococcus oralis",
-        "Streptococcus group C/G",
-        "Streptococcus sp.",
-        "Streptococcus sanguinis",
-        "Staphylococcus haemolyticus",
-        "Salmonella Typhi",
-        "Salmonella Paratyphi A",
-        "Salmonella sp.",
-        "Salmonella choleraesuis",
-        "Salmonella enterica",
-        "Enterococcus casseliflavus",
-        "Enterococcus casseliflavus/gallinarum",
-        "Enterococcus avium",
-        "Citrobacter koseri",
-        "Klebsiella aerogenes",
-        "Citrobacter freundii",
-        "Klebsiella ozaenae",
-        "Proteus vulgaris",
-        "Klebsiella oxytoca",
-        "Providencia stuartii",
-        "Morganella morganii",
-        "Citrobacter youngae",
-        "Enterococcus durans",
-        "Burkholderia pseudomallei",
-        "Streptococcus suis",
-        "Streptococcus pyogenes/A",
-        "Aeromonas hydrophila",
-        "Aeromonas caviae",
-        "Aeromonas veronii",
-        "Acinetobacter lwoffii",
-        "Acinetobacter haemolyticus",
-        "Streptococcus dysgalactiae",
-        "Streptococcus parasanguinis",
-        "Staphylococcus lugdunensis",
-        "Staphylococcus caprae",
-        "Streptococcus pneumoniae",
-        "Enterococcus gallinarum",
-        "Enterococcus hirae",
-        "Enterococcus sp.",
-        "Candida glabrata",
-        "Candida tropicalis",
-        "Candida melibiosica",
-        "Aeromonas sobria",
-        "Aerococcus viridans",
-        "Pseudomonas putida",
-        "Enterococcus raffinosus",
-        "Serratia liquefaciens",
-        "Edwardsiella tarda",
-        "Plesiomonas shigelloides",
-        "Listeria monocytogenes",
-        "Streptococcus C",
-        "Candida sp.",
-        "Candida parapsilosis",
-        "Gemella morbillorum",
-        "Streptococcus vestibularis",
-        "Streptococcus porcinus",
-        "Staphylocoque a coagulase negative",
-        "Enterobacter aerogenes",
-        "Citrobacter farmeri",
-        "Raoultella terrigena",
-        "Serratia marcescens",
-        "Acinetobacter lwoffii/haemolyticus",
-        "Providencia rettgeri",
-        "Shigella sonnei",
-        "Cronobacter sakazakii",
-    ],
-    "contamination": ["Yes", "No"],
     "direct_2": ["Cocci Gram Pos", "Bacille Gram Neg", "Levure", "Bacille Gram Pos"],
     "culture_3": [
         "Cocci Gram Pos type streptocoque",
@@ -582,33 +512,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
-        if request.url.path.startswith("/api") and request.url.path != "/api/login":
-            credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
-            if credentials:
-                if not self.verify_jwt(credentials.credentials):
-                    raise HTTPException(status_code=403, detail="Invalid token or expired token.")
-                return credentials.credentials
-            else:
-                raise HTTPException(status_code=403, detail="Invalid authorization code.")
-        return await request.app(request.scope, request.receive, request.send)
+        # if request.url.path.startswith("/api") and request.url.path != "/api/login":
+        #     credentials: HTTPAuthorizationCredentials = await super(
+        #         JWTBearer, self
+        #     ).__call__(request)
+        #     if credentials:
+        #         if not self.verify_jwt(credentials.credentials):
+        #             raise HTTPException(
+        #                 status_code=403, detail="Invalid token or expired token."
+        #             )
+        #         return credentials.credentials
+        #     else:
+        #         raise HTTPException(
+        #             status_code=403, detail="Invalid authorization code."
+        #         )
+        # return await request.app(request.scope, request.receive, request.send)
+        pass
 
-    def verify_jwt(self, jwtoken: str) -> bool:
-        is_token_valid: bool = False
+    # def verify_jwt(self, jwtoken: str) -> bool:
+    #     is_token_valid: bool = False
 
-        try:
-            payload = jwt.decode(jwtoken, "secret", algorithms=["HS256"])
-        except:
-            payload = None
-        if payload:
-            is_token_valid = True
-        return is_token_valid
+    #     try:
+    #         payload = jwt.decode(jwtoken, "secret", algorithms=["HS256"])
+    #     except:
+    #         payload = None
+    #     if payload:
+    #         is_token_valid = True
+    #     return is_token_valid
 
-app.add_middleware(JWTBearer)
 
 @app.get("/api/options")
 def read_options():
@@ -623,9 +560,7 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
     ward_en = data.get("ward_en")
     service_type = data.get("service_type")
     date = data.get("date")
-    prelevement_type = data.get("prelevement_type")
-    germe = data.get("germe")
-    contamination = data.get("contamination")
+    sample = data.get("sample")
     direct_2 = data.get("direct_2")
     culture_3 = data.get("culture_3")
     genre_4 = data.get("genre_4")
@@ -635,42 +570,45 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
     date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
 
     # Decode the token to get the user information
-    payload = jwt.decode(token, "secret", algorithms=["HS256"])
-    user_id = payload.get("user_id")
+    # payload = jwt.decode(token, "secret", algorithms=["HS256"])
+    # user_id = payload.get("user_id")
 
-    # Store user input 
-    create_activity(user_id, data)
+    # Store user input
+    # create_activity(user_id, data)
 
     df_info, result_probab_dict = amr_project(
-        age,
-        sex,
-        address,
-        ward_en,
-        service_type,
-        date,
-        prelevement_type,
-        germe,
-        contamination,
-        direct_2,
-        culture_3,
-        genre_4,
-        species_training_5,
+        age=age,
+        sex=sex,
+        address=address,
+        ward_en=ward_en,
+        service_type=service_type,
+        date=date,
+        sample=sample,
+        direct_2=direct_2,
+        culture_3=culture_3,
+        genre_4=genre_4,
+        species_5=species_training_5,
     )
 
     return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}
 
-@app.post("/api/login")
-def login(data: dict):
-    username = data.get("username")
-    password = data.get("password")
-    
-    user = verify_user(username, password)
 
-    if user:
-        token = jwt.encode({"user_id": user._id},"secret", algorithm="HS256")
-        return {"message": "Login successful", "token": token}
-    else:
-        return {"message": "Invalid Credential", "token": None}
+# @app.post("/api/login")
+# def login(data: dict):
+#     username = data.get("username")
+#     password = data.get("password")
+
+#     user = verify_user(username, password)
+
+#     user_id = user.get("_id").__str__()
+#     print(user_id)
+
+#     if user:
+#         token = jwt.encode({"user_id": user_id}, "secret", algorithm="HS256")
+#         return {"message": "Login successful", "token": token}
+#     else:
+#         raise HTTPException(status_code=401, detail="Invalid credentials")
+
 
 app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
 
@@ -678,7 +616,6 @@ if __name__ == "__main__":
     import uvicorn
     import os
 
+    # seed_users()
 
-    seed_users()
-
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True if os.environ.get("DEBUG") == "True" else False)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

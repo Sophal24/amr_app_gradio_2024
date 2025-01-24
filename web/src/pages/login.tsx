@@ -23,10 +23,12 @@ const LoginPage: React.FC = () => {
       expires.setDate(expires.getDate() + 7);
       document.cookie = `token=${response.data.token}; path=/; expires=${expires.toUTCString()};`;
       // Handle successful login, e.g., save token, redirect, etc.
+      setError('');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       window.location.reload();
     } catch (error) {
       console.error('Login failed', error);
-      setError(error.response?.data?.message || 'Something went wrong');
+      setError(error?.detail || 'Something went wrong');
     }
     setLoading(false);
   };
