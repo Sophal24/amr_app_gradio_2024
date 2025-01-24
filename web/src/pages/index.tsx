@@ -175,7 +175,11 @@ const HomePage = () => {
   const handleExport = async () => {
     const formDataSheet = XLSX.utils.json_to_sheet([formData]);
     const resultsSheet = XLSX.utils.json_to_sheet(
-      results.map((r) => ({ name: r.name, percentage: `${Math.round(r.value)}%` }))
+      results.map((r) => ({
+        antibiotic: r.name,
+        percentage: `${Math.round(r.value)}%`,
+        status: Math.round(r.value) >= 50 ? 'S' : 'R',
+      }))
     );
 
     const workbook = XLSX.utils.book_new();
