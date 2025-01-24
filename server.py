@@ -1,7 +1,6 @@
-import sqlite3
 import joblib
 import pandas as pd
-from utils2 import set_label_encoding
+from utils import set_label_encoding
 from datetime import datetime
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,123 +57,224 @@ culture_3_dict = set_label_encoding(df, "3_culture")
 genre_4_dict = set_label_encoding(df, "4_genre")
 espece_5_training_dict = set_label_encoding(df, "5_espece_training")
 contamination_dict = set_label_encoding(df, "contamination")
+sample_dict = set_label_encoding(df, 'prelevement_type')
 
-
-def amr_project(
-    age,
-    sex,
-    address,
-    ward_en,
-    service_type,
-    date,
-    prelevement_type,
-    germe,
-    contamination,
-    direct_2,
-    culture_3,
-    genre_4,
-    species_training_5,
-):
-    # print(sex, sex_dict[sex])
-    # print(service_code, service_code_dict[service_code])
-    # print(ward_dict, ward_dict[ward_en])
-    # print(service_type, service_type_dict[service_type])
+def amr_project(age, sex, address, ward_en, service_type, date, sample, direct_2, culture_3, genre_4, species_5):
 
     # Convert timestamp to a datetime object
     date_time = datetime.fromtimestamp(date)
     # Extract the month
     month = date_time.month
-    # print(date, month)
 
-    # print(prelevement_type, prelevement_type_dict[prelevement_type])
-    # print(germe, germe_dict[germe])
+    # Stage 5
+    if age and sex and address and ward_en and service_type and sample and direct_2 and culture_3 and genre_4 and species_5:
 
-    contamination = (
-        0 if contamination == "No" else 1
-    )  # Convert contamination to 0 and 1
-    # print(contamination)
+        # Sample data
+        input_data = {
+            "month": [month],
+            "age": [age],
+            'sex': [sex_dict[sex]],
+            'address': [address_dict[address]],
+            'ward_en': [ward_dict[ward_en]],
+            'service_type': [service_type_dict[service_type]],
+            'sample': [sample_dict[sample]],
+            '2_direct': [direct_2_dict[direct_2]],
+            '3_culture': [culture_3_dict[culture_3]],
+            '4_genre': [genre_4_dict[genre_4]],
+            '5_species': [espece_5_training_dict[species_5]]
+        }
+        # Create the DataFrame
+        df = pd.DataFrame(input_data)
 
-    # print(direct_2, direct_2_dict[direct_2])
-    # print(culture_3, culture_3_dict[culture_3])
-    # print(genre_4, genre_4_dict[genre_4])
-    # print(species_training_5, espece_5_training_dict[species_training_5])
-    # print()
-    # print(
-    #     age,
-    #     sex,
-    #     ward_en,
-    #     service_type,
-    #     date,
-    #     prelevement_type,
-    #     germe,
-    #     contamination,
-    #     direct_2,
-    #     culture_3,
-    #     genre_4,
-    #     species_training_5,
-    # )
+        # Load the model back from the file
+        rf_model_loaded = joblib.load('random_forest_stage_5.joblib')
+        one_row_test = df
 
-    # Sample data
-    input_data = {
-        "month": [month],
-        "age": [age],
-        "sex": [sex_dict[sex]],
-        "address": [address_dict[address]],
-        "ward_en": [ward_dict[ward_en]],
-        "service_type": [service_type_dict[service_type]],
-        "prelevement_type": [prelevement_type_dict[prelevement_type]],
-        "espece_requete": [espece_requete_dict[germe]],
-        "2_direct": [direct_2_dict[direct_2]],
-        "3_culture": [culture_3_dict[culture_3]],
-        "4_genre": [genre_4_dict[genre_4]],
-        "5_espece_training": [espece_5_training_dict[species_training_5]],
-        "contamination": [contamination],
-    }
+        # Now you can use the loaded model to make predictions
+        y_pred_loaded = rf_model_loaded.predict(one_row_test)
 
-    # Create the DataFrame
-    df = pd.DataFrame(input_data)
-    # print(tabulate(df, headers="keys", tablefmt="fancy_grid"))
-    # print(df)
+        y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
 
-    # Load the model back from the file
-    rf_model_loaded = joblib.load("testing_random_forest_model_v2.joblib")
-    one_row_test = df
+        result_class_dict = dict()
+        result_probab_dict = dict()
 
-    # Now you can use the loaded model to make predictions
-    y_pred_loaded = rf_model_loaded.predict(one_row_test)
-    # print(len(y_pred_loaded[0]), np.array(y_pred_loaded))
+        for i in range(len(target_labels)):
+            message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            result_class_dict[target_labels[i]] = message
+            result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
 
-    y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
-    # print(len(y_pred_prob), np.array(y_pred_prob))
+        
+        # Sample data
+        data = {
+            "Model": ["Random Forest - Stage 5"]
+        }
+        # Create the DataFrame
+        df_info = pd.DataFrame(data)
 
-    result_class_dict = dict()
-    result_probab_dict = dict()
 
-    for i in range(len(target_labels)):
-        message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
-        # print(
-        #     target_labels[i],
-        #     ": class - ",
-        #     y_pred_loaded[0][i],
-        #     message,
-        #     " - Probab:",
-        #     y_pred_prob[i][0][1],
-        # )
-        result_class_dict[target_labels[i]] = message
-        result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
+    # Stage 4
+    elif age and sex and address and ward_en and service_type and sample and direct_2 and culture_3 and genre_4:
+        # Sample data
+        input_data = {
+            "month": [month],
+            "age": [age],
+            'sex': [sex_dict[sex]],
+            'address': [address_dict[address]],
+            'ward_en': [ward_dict[ward_en]],
+            'service_type': [service_type_dict[service_type]],
+            'sample': [sample_dict[sample]],
+            '2_direct': [direct_2_dict[direct_2]],
+            '3_culture': [culture_3_dict[culture_3]],
+            '4_genre': [genre_4_dict[genre_4]]
+        }
+        # Create the DataFrame
+        df = pd.DataFrame(input_data)
+        # Load the model back from the file
+        rf_model_loaded = joblib.load('random_forest_stage_4.joblib')
+        one_row_test = df
 
-    # print()
-    # print(result_class_dict)
-    # print(result_probab_dict)
+        # Now you can use the loaded model to make predictions
+        y_pred_loaded = rf_model_loaded.predict(one_row_test)
 
-    # Sample data
-    data = {"Model": ["Randome Forest"]}
-    # Create the DataFrame
-    df_info = pd.DataFrame(data)
-    # print(tabulate(df_info, headers="keys", tablefmt="fancy_grid"))
+        y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+
+        result_class_dict = dict()
+        result_probab_dict = dict()
+
+        for i in range(len(target_labels)):
+            message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            result_class_dict[target_labels[i]] = message
+            result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
+
+
+         # Sample data
+        data = {
+            "Model": ["Random Forest - Stage 4"]
+        }
+        # Create the DataFrame
+        df_info = pd.DataFrame(data)
+
+    # Stage 3
+    elif age and sex and address and ward_en and service_type and sample and direct_2 and culture_3:
+        # Sample data
+        input_data = {
+            "month": [month],
+            "age": [age],
+            'sex': [sex_dict[sex]],
+            'address': [address_dict[address]],
+            'ward_en': [ward_dict[ward_en]],
+            'service_type': [service_type_dict[service_type]],
+            'sample': [sample_dict[sample]],
+            '2_direct': [direct_2_dict[direct_2]],
+            '3_culture': [culture_3_dict[culture_3]]
+        }
+        # Create the DataFrame
+        df = pd.DataFrame(input_data)
+        # Load the model back from the file
+        rf_model_loaded = joblib.load('random_forest_stage_3.joblib')
+        one_row_test = df
+
+        # Now you can use the loaded model to make predictions
+        y_pred_loaded = rf_model_loaded.predict(one_row_test)
+
+        y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+
+        result_class_dict = dict()
+        result_probab_dict = dict()
+
+        for i in range(len(target_labels)):
+            message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            result_class_dict[target_labels[i]] = message
+            result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
+
+         # Sample data
+        data = {
+            "Model": ["Random Forest - Stage 3"]
+        }
+        # Create the DataFrame
+        df_info = pd.DataFrame(data)
+
+    # Stage 2
+    elif age and sex and address and ward_en and service_type and sample and direct_2:
+        # Sample data
+        input_data = {
+            "month": [month],
+            "age": [age],
+            'sex': [sex_dict[sex]],
+            'address': [address_dict[address]],
+            'ward_en': [ward_dict[ward_en]],
+            'service_type': [service_type_dict[service_type]],
+            'sample': [sample_dict[sample]],
+            '2_direct': [direct_2_dict[direct_2]]
+        }
+        # Create the DataFrame
+        df = pd.DataFrame(input_data)
+        # Load the model back from the file
+        rf_model_loaded = joblib.load('random_forest_stage_2.joblib')
+        one_row_test = df
+
+        # Now you can use the loaded model to make predictions
+        y_pred_loaded = rf_model_loaded.predict(one_row_test)
+
+        y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+
+        result_class_dict = dict()
+        result_probab_dict = dict()
+
+        for i in range(len(target_labels)):
+            message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            result_class_dict[target_labels[i]] = message
+            result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
+
+         # Sample data
+        data = {
+            "Model": ["Random Forest -  Stage 2"]
+        }
+        # Create the DataFrame
+        df_info = pd.DataFrame(data)
+
+    # Stage 1
+    elif age and sex and address and ward_en and service_type and sample:
+        # Sample data
+        input_data = {
+            "month": [month],
+            "age": [age],
+            'sex': [sex_dict[sex]],
+            'address': [address_dict[address]],
+            'ward_en': [ward_dict[ward_en]],
+            'service_type': [service_type_dict[service_type]],
+            'sample': [sample_dict[sample]]
+        }
+        # Create the DataFrame
+        df = pd.DataFrame(input_data)
+        
+        # Load the model back from the file
+        rf_model_loaded = joblib.load('random_forest_stage_1.joblib')
+        one_row_test = df
+
+        # Now you can use the loaded model to make predictions
+        y_pred_loaded = rf_model_loaded.predict(one_row_test)
+
+        y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+
+        result_class_dict = dict()
+        result_probab_dict = dict()
+
+        for i in range(len(target_labels)):
+            message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            result_class_dict[target_labels[i]] = message
+            result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
+
+
+         # Model used and stage information
+        data = {
+            "Model": ["Random Forest - Stage 1"]
+        }
+        # Create the DataFrame
+        df_info = pd.DataFrame(data)
 
     return df_info, result_probab_dict
-    # return df_info, {'Amoxicilline': 0.74, 'Augmentin': 0.22, 'Oxacilline / cefazoline': 0.62, 'Tazocilline': 0.11, 'Cefotaxime / ceftriaxone': 0.94, 'Ceftazidime': 0.38, 'Cefepime': 0.6, 'Aztreonam': 0.5, 'Imipenem': 0.71, 'Meropenem': 0.12, 'Ertapenem': 0.58, 'Amikacine': 0.22, 'Gentamicine': 0.87, 'Ciprofloxacine': 0.18, 'Levofloxacine': 0.85, 'Bactrim': 0.96, 'Vancomycine': 0.7, 'Rifampicine': 0.16, 'Clindamycine': 0.85, 'Macrolides': 0.89}
+    # return df_info, {'Amoxicilline': 0.74, 'Augmentin': 0.22, 'Oxacilline / cefazoline': 0.62}
 
 
 def process_input(input_text):
