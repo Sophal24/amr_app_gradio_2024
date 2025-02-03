@@ -15,6 +15,7 @@ import {
   LinearProgress,
   Dialog,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -200,6 +201,11 @@ const HomePage = () => {
 
   const disabledForm = disabledStage2;
 
+  const handleLogout = async () => {
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    window.location.reload();
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Dialog
@@ -331,6 +337,11 @@ const HomePage = () => {
               >
                 Help ?
               </Button>
+              <Tooltip title="Logout">
+                <Button variant="outlined" color="error" onClick={handleLogout}>
+                  <Iconify icon="mdi:logout" width={24} />
+                </Button>
+              </Tooltip>
             </Stack>
           </Grid>
           <Grid item xs={12}>

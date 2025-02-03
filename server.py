@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# from database import create_activity, get_db, seed_users, verify_user
+from database import create_activity, get_db, seed_users, verify_user
 import jwt
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -518,33 +518,32 @@ class JWTBearer(HTTPBearer):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
-        # if request.url.path.startswith("/api") and request.url.path != "/api/login":
-        #     credentials: HTTPAuthorizationCredentials = await super(
-        #         JWTBearer, self
-        #     ).__call__(request)
-        #     if credentials:
-        #         if not self.verify_jwt(credentials.credentials):
-        #             raise HTTPException(
-        #                 status_code=403, detail="Invalid token or expired token."
-        #             )
-        #         return credentials.credentials
-        #     else:
-        #         raise HTTPException(
-        #             status_code=403, detail="Invalid authorization code."
-        #         )
-        # return await request.app(request.scope, request.receive, request.send)
-        pass
+        if request.url.path.startswith("/api") and request.url.path != "/api/login":
+            credentials: HTTPAuthorizationCredentials = await super(
+                JWTBearer, self
+            ).__call__(request)
+            if credentials:
+                if not self.verify_jwt(credentials.credentials):
+                    raise HTTPException(
+                        status_code=403, detail="Invalid token or expired token."
+                    )
+                return credentials.credentials
+            else:
+                raise HTTPException(
+                    status_code=403, detail="Invalid authorization code."
+                )
+        return await request.app(request.scope, request.receive, request.send)
 
-    # def verify_jwt(self, jwtoken: str) -> bool:
-    #     is_token_valid: bool = False
+    def verify_jwt(self, jwtoken: str) -> bool:
+        is_token_valid: bool = False
 
-    #     try:
-    #         payload = jwt.decode(jwtoken, "secret", algorithms=["HS256"])
-    #     except:
-    #         payload = None
-    #     if payload:
-    #         is_token_valid = True
-    #     return is_token_valid
+        try:
+            payload = jwt.decode(jwtoken, "secret", algorithms=["HS256"])
+        except:
+            payload = None
+        if payload:
+            is_token_valid = True
+        return is_token_valid
 
 
 @app.get("/api/options")
@@ -570,11 +569,11 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
     date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
 
     # Decode the token to get the user information
-    # payload = jwt.decode(token, "secret", algorithms=["HS256"])
-    # user_id = payload.get("user_id")
+    payload = jwt.decode(token, "secret", algorithms=["HS256"])
+    user_id = payload.get("user_id")
 
     # Store user input
-    # create_activity(user_id, data)
+    create_activity(user_id, data)
 
     df_info, result_probab_dict = amr_project(
         age=age,
@@ -593,29 +592,28 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
     return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}
 
 
-# @app.post("/api/login")
-# def login(data: dict):
-#     username = data.get("username")
-#     password = data.get("password")
+@app.post("/api/login")
+def login(data: dict):
+    username = data.get("username")
+    password = data.get("password")
 
-#     user = verify_user(username, password)
+    user = verify_user(username, password)
 
-#     user_id = user.get("_id").__str__()
-#     print(user_id)
+    user_id = user.get("_id").__str__()
 
-#     if user:
-#         token = jwt.encode({"user_id": user_id}, "secret", algorithm="HS256")
-#         return {"message": "Login successful", "token": token}
-#     else:
-#         raise HTTPException(status_code=401, detail="Invalid credentials")
+    if user:
+        token = jwt.encode({"user_id": user_id}, "secret", algorithm="HS256")
+        return {"message": "Login successful", "token": token}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
-app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
+# app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
 
 if __name__ == "__main__":
     import uvicorn
     import os
 
-    # seed_users()
+    seed_users()
 
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
