@@ -304,7 +304,7 @@ const HomePage = () => {
           </Stack>
         </Stack>
       </Dialog>
-      <Container maxWidth={false} sx={{ py: 4, px: { xs: 4, md: 8 } }}>
+      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 8 } }}>
         <Grid container spacing={4}>
           <Grid item xs={12}>
             <Stack
@@ -327,7 +327,14 @@ const HomePage = () => {
                   transform: 'rotate(45deg)',
                 }}
               />
-              <Typography variant="h5">Antibiotic Sensitivity Analysis</Typography>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontSize: { xs: '1rem', md: '1.5rem' },
+                }}
+              >
+                Antibiotic Sensitivity Analysis
+              </Typography>
               <Box flexGrow={1} />
               <Button
                 variant="contained"
@@ -564,7 +571,11 @@ const HomePage = () => {
               justifyContent="flex-start"
               mt={4}
             >
-              <Button variant="outlined" onClick={handleClear} sx={{ px: 8 }}>
+              <Button
+                variant="outlined"
+                onClick={handleClear}
+                sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
+              >
                 Clear All
               </Button>
               <LoadingButton
@@ -572,7 +583,7 @@ const HomePage = () => {
                 onClick={handleSubmit}
                 disabled={disabledForm}
                 loading={isLoading}
-                sx={{ px: 8 }}
+                sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
               >
                 Submit
               </LoadingButton>

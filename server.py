@@ -6,7 +6,14 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from database import create_activity, get_db, seed_users, verify_user
+from database import (
+    create_activity,
+    get_db,
+    get_locations,
+    seed_locations,
+    seed_users,
+    verify_user,
+)
 import jwt
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -608,12 +615,19 @@ def login(data: dict):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
-# app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
+@app.get("/api/allowed-locations")
+def allowed_locations():
+    locations = get_locations()
+    return locations
+
+
+app.mount("/", StaticFiles(directory="./web/dist", html=True), name="web")
 
 if __name__ == "__main__":
     import uvicorn
     import os
 
     seed_users()
+    seed_locations()
 
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    uvicorn.run(app, port=int(os.environ.get("PORT", 8000)), host="0.0.0.0")

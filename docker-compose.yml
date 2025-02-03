@@ -49,8 +49,6 @@ services:
       - mongo
     networks:
       - amr
-    volumes:
-      - .:/app
     
 networks:
   amr:

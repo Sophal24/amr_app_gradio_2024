@@ -121,7 +121,7 @@ const LoginPage: React.FC = () => {
           />
           <TextField
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             fullWidth
             variant="outlined"
             value={password}
@@ -141,11 +141,7 @@ const LoginPage: React.FC = () => {
               ),
             }}
           />
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error">{error}</Alert>}
           <Stack direction="row">
             <Stack
               direction="row"
