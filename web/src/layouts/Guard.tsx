@@ -30,9 +30,10 @@ const Guard = ({ children }: { children: React.ReactNode }) => {
   const validateUser = async () => {
     try {
       // Check if user near location (e.g., hospital, cadt)
-      // const allowedLocations: { lat: number; lng: number; allowedDistance: number }[] = [
-      //   { lat: 11.581396075915201, lng: 104.91654819669195, allowedDistance: 1000 }, // Calmette Hospital
-      //   { lat: 11.654651435959629, lng: 104.91148097840758, allowedDistance: 1000 }, // CADT
+      // const allowedLocations: { lat: number; lng: number; allowed_distance: number }[] = [
+      //   { lat: 11.581396075915201, lng: 104.91654819669195, allowed_distance: 1000 }, // Calmette Hospital
+      //   { lat: 11.654651435959629, lng: 104.91148097840758, allowed_distance: 1000 }, // CADT
+      //   { lat: 11.6385853, lng: 104.9126495, allowed_distance: 1000 }, // TEST
       // ];
       const res = await axiosInstance.get('/api/allowed-locations');
       const allowedLocations = res.data;
