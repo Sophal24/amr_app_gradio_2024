@@ -27,16 +27,43 @@ const Guard = ({ children }: { children: React.ReactNode }) => {
     return R * c; // Distance in meters
   };
 
+  const validateToken = async () => {
+    const token = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('token='))
+      ?.split('=')[1];
+    setIsAuthenticated(!!token);
+
+    if (token) {
+      console.log('Token found', token);
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = payload.exp * 1000 < Date.now();
+
+      if (isExpired) {
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        setIsAuthenticated(false);
+        window.location.reload();
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setLoading(false);
+  };
+
   const validateUser = async () => {
     try {
       // Check if user near location (e.g., hospital, cadt)
-      // const allowedLocations: { lat: number; lng: number; allowed_distance: number }[] = [
-      //   { lat: 11.581396075915201, lng: 104.91654819669195, allowed_distance: 1000 }, // Calmette Hospital
-      //   { lat: 11.654651435959629, lng: 104.91148097840758, allowed_distance: 1000 }, // CADT
-      //   { lat: 11.6385853, lng: 104.9126495, allowed_distance: 1000 }, // TEST
-      // ];
-      const res = await axiosInstance.get('/api/allowed-locations');
-      const allowedLocations = res.data;
+      const allowedLocations: { lat: number; lng: number; allowed_distance: number }[] = [
+        // { lat: 11.581396075915201, lng: 104.91654819669195, allowed_distance: 1000 }, // Calmette Hospital
+        // { lat: 11.654651435959629, lng: 104.91148097840758, allowed_distance: 1000 }, // CADT
+      ];
+      // const res = await axiosInstance.get('/api/allowed-locations');
+      // const allowedLocations = res.data;
+
+      if (allowedLocations.length === 0) {
+        validateToken();
+        return;
+      }
+
       window.navigator.geolocation.getCurrentPosition(
         async (position) => {
           const currentLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
@@ -64,25 +91,7 @@ const Guard = ({ children }: { children: React.ReactNode }) => {
           console.log('User is near the location');
 
           // Check if token exists in cookie
-          const token = document.cookie
-            .split('; ')
-            .find((row) => row.startsWith('token='))
-            ?.split('=')[1];
-          setIsAuthenticated(!!token);
-
-          if (token) {
-            console.log('Token found', token);
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const isExpired = payload.exp * 1000 < Date.now();
-
-            if (isExpired) {
-              document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-              setIsAuthenticated(false);
-              window.location.reload();
-            }
-          }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          setLoading(false);
+          validateToken();
         },
         (err) => {
           console.log('Location error', err);

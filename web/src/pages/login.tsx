@@ -10,6 +10,9 @@ import {
   Checkbox,
   InputAdornment,
   IconButton,
+  Grid,
+  Divider,
+  Hidden,
 } from '@mui/material';
 import { isEmpty } from 'lodash';
 import React, { useState } from 'react';
@@ -55,37 +58,44 @@ const LoginPage: React.FC = () => {
     <Stack>
       <Box
         component="img"
-        src="https://pppenglish.sgp1.digitaloceanspaces.com/image/main/field/image/the_multi-purpose_techo_aphivadh_building_is_put_into_use_at_calmette_hospital_in_phnom_penh_on_may_23._hong_menea.jpg"
+        src="/assets/login-bg.png"
         alt="logo"
         sx={{
           position: 'fixed',
           width: '100vw',
           height: '100vh',
           objectFit: 'cover',
-          filter: 'blur(5px) brightness(0.8)',
           zIndex: 0,
+        }}
+      />
+      <Box
+        sx={{
+          position: 'fixed',
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: '#29338A',
+          zIndex: 1,
+          opacity: 0.8,
         }}
       />
       <Paper
         elevation={6}
         sx={{
           position: 'fixed',
-          top: { xs: '50%', sm: '50%' },
-          left: { xs: '50%', sm: '50%' },
+          top: { xs: '0', md: '50%' },
+          left: { xs: '0', md: '50%' },
           transform: {
-            xs: 'translate(-50%, -50%)',
-            sm: 'translate(-50%, -50%)',
+            xs: 'translate(0%, 0%)',
+            md: 'translate(-50%, -50%)',
           },
-          zIndex: 1,
-          p: 2,
-          minWidth: {
-            xs: '90%',
-            sm: '400px',
-          },
-          minHeight: {
-            xs: 'auto',
-            sm: 'auto',
-          },
+          zIndex: 2,
+          p: 3,
+          borderRadius: { xs: 0, md: '20px' },
+          width: { xs: '100vw', md: 'auto' },
+          height: { xs: '100vh', md: 'auto' },
+          overflow: 'auto',
+          backgroundColor: 'background.default',
+          minWidth: { xs: '100%', md: '800px' },
         }}
       >
         <Box
@@ -97,77 +107,135 @@ const LoginPage: React.FC = () => {
             handleLogin();
           }}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
+            width: '100%',
+            height: '100%',
           }}
         >
-          <Typography variant="h4" component="h1" gutterBottom color="primary">
-            Login
-          </Typography>
-          <TextField
-            label="Username"
-            fullWidth
-            variant="outlined"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="bi:person" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            fullWidth
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="bi:key" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)}>
-                    <Iconify icon={showPassword ? 'bi:eye-slash' : 'bi:eye'} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          {error && <Alert severity="error">{error}</Alert>}
-          <Stack direction="row">
-            <Stack
-              direction="row"
-              alignItems="center"
-              onClick={() => setRemember(!remember)}
-              sx={{ cursor: 'pointer' }}
-            >
-              <Checkbox name="remeber" checked={remember} />
-              <Typography variant="body2" color="primary">
-                Remember me
-              </Typography>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={3}
+            justifyContent="center"
+            flex={1}
+          >
+            <Stack flex={1}>
+              <Stack
+                sx={{
+                  color: 'primary.main',
+                  textAlign: 'center',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '100%',
+                  height: '100%',
+                }}
+                spacing={2}
+              >
+                <Stack>
+                  <Iconify
+                    icon="healthicons:biomarker-24px"
+                    width={120}
+                    sx={{
+                      transform: 'rotate(45deg)',
+                      m: 'auto',
+                    }}
+                  />
+                  <Typography variant="h4" component="h1" gutterBottom>
+                    Welcome to AMR
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    Clinical Decision Support System
+                  </Typography>
+                </Stack>
+                <Typography variant="body2">
+                  Enhance antimicrobial prescribing with AI-driven insights. Login to access
+                  real-time sensitivity predictions and support better patient outcomes.
+                </Typography>
+              </Stack>
+            </Stack>
+            <Hidden smDown>
+              <Divider
+                flexItem
+                orientation="vertical"
+                sx={{ borderStyle: 'dashed', borderColor: 'primary.main' }}
+              />
+            </Hidden>
+            <Hidden mdUp>
+              <Divider
+                flexItem
+                orientation="horizontal"
+                sx={{ borderStyle: 'dashed', borderColor: 'primary.main' }}
+              />
+            </Hidden>
+            <Stack flex={1}>
+              <Stack spacing={3}>
+                <Typography variant="h4" component="h1" gutterBottom color="primary">
+                  Login
+                </Typography>
+                <TextField
+                  label="Username"
+                  fullWidth
+                  variant="outlined"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Iconify icon="bi:person" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <TextField
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  fullWidth
+                  variant="outlined"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Iconify icon="bi:key" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)}>
+                          <Iconify icon={showPassword ? 'bi:eye-slash' : 'bi:eye'} />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                {error && <Alert severity="error">{error}</Alert>}
+                <Stack direction="row">
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    onClick={() => setRemember(!remember)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <Checkbox name="remeber" checked={remember} />
+                    <Typography variant="body2" color="primary">
+                      Remember me
+                    </Typography>
+                  </Stack>
+                </Stack>
+                <Box>
+                  <LoadingButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    onClick={handleLogin}
+                    loading={loading}
+                    disabled={isEmpty(username) || isEmpty(password)}
+                  >
+                    Login
+                  </LoadingButton>
+                </Box>
+              </Stack>
             </Stack>
           </Stack>
-          <Box>
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={handleLogin}
-              loading={loading}
-              disabled={isEmpty(username) || isEmpty(password)}
-            >
-              Login
-            </LoadingButton>
-          </Box>
         </Box>
       </Paper>
     </Stack>
