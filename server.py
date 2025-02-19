@@ -40,7 +40,7 @@ target_labels = [
     "ClindamycineMacrolides",
 ]
 # df = pd.read_excel('dataset/Calmette_data.xlsx')
-df = pd.read_excel("Calmette_data_v2.xlsx")
+df = pd.read_excel("antibiogram_dataset.xlsx")
 # df = df.applymap(lambda x: x.replace('\u200b', '') if isinstance(x, str) else x)
 df = df.replace(to_replace="\u200b", value="", regex=True)
 # drop columns
@@ -64,6 +64,7 @@ genre_4_dict = set_label_encoding(df, "4_genre")
 espece_5_training_dict = set_label_encoding(df, "5_espece_training")
 contamination_dict = set_label_encoding(df, "contamination")
 sample_dict = set_label_encoding(df, "prelevement_type")
+diagnosis_dict = set_label_encoding(df, "new_diagnosis")  ## add diagnosis
 
 
 def amr_project(
@@ -74,11 +75,13 @@ def amr_project(
     service_type,
     date,
     sample,
+    diagnosis,
     direct_2,
     culture_3,
     genre_4,
     species_5,
 ):
+
     # Convert timestamp to a datetime object
     date_time = datetime.fromtimestamp(date)
     # Extract the month
@@ -97,6 +100,7 @@ def amr_project(
         and genre_4
         and species_5
     ):
+
         # Sample data
         input_data = {
             "month": [month],
@@ -106,6 +110,7 @@ def amr_project(
             "ward_en": [ward_dict[ward_en]],
             "service_type": [service_type_dict[service_type]],
             "sample": [sample_dict[sample]],
+            "new_diagnosis": [diagnosis_dict[diagnosis]],
             "2_direct": [direct_2_dict[direct_2]],
             "3_culture": [culture_3_dict[culture_3]],
             "4_genre": [genre_4_dict[genre_4]],
@@ -157,6 +162,7 @@ def amr_project(
             "ward_en": [ward_dict[ward_en]],
             "service_type": [service_type_dict[service_type]],
             "sample": [sample_dict[sample]],
+            "new_diagnosis": [diagnosis_dict[diagnosis]],
             "2_direct": [direct_2_dict[direct_2]],
             "3_culture": [culture_3_dict[culture_3]],
             "4_genre": [genre_4_dict[genre_4]],
@@ -205,6 +211,7 @@ def amr_project(
             "ward_en": [ward_dict[ward_en]],
             "service_type": [service_type_dict[service_type]],
             "sample": [sample_dict[sample]],
+            "new_diagnosis": [diagnosis_dict[diagnosis]],
             "2_direct": [direct_2_dict[direct_2]],
             "3_culture": [culture_3_dict[culture_3]],
         }
@@ -243,6 +250,7 @@ def amr_project(
             "ward_en": [ward_dict[ward_en]],
             "service_type": [service_type_dict[service_type]],
             "sample": [sample_dict[sample]],
+            "new_diagnosis": [diagnosis_dict[diagnosis]],
             "2_direct": [direct_2_dict[direct_2]],
         }
         # Create the DataFrame
@@ -280,6 +288,7 @@ def amr_project(
             "ward_en": [ward_dict[ward_en]],
             "service_type": [service_type_dict[service_type]],
             "sample": [sample_dict[sample]],
+            "new_diagnosis": [diagnosis_dict[diagnosis]],
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
@@ -307,7 +316,6 @@ def amr_project(
         df_info = pd.DataFrame(data)
 
     return df_info, result_probab_dict
-    # return df_info, {'Amoxicilline': 0.74, 'Augmentin': 0.22, 'Oxacilline / cefazoline': 0.62}
 
 
 def process_input(input_text):
@@ -507,6 +515,25 @@ options = {
         "Shigella sonnei",
         "Cronobacter malonaticus",
     ],
+    "diagnosis": [
+        "Les infections maternelles ",
+        "Infection du tissu mou et ostéo-articulaire ",
+        "Infection digestive ",
+        "Infection and Trouble metabolique(Diabetes…)",
+        "Infection Respiratoire",
+        "Complications infectieuses des Accidents vasculaire cérébrales",
+        "Infection system nerveux central ",
+        "Other infection",
+        "Infection en onco-hématologie ",
+        "Infection urinaire ",
+        "Infections genitales",
+        "Fracture osseuse",
+        "Infection and HTA, Coeur , Vasculaire ",
+        "ORL , EYES and ENT",
+        "Choc Septique ",
+        "Melioidosis",
+        "Unknown",
+    ],
 }
 
 app = FastAPI()
@@ -571,6 +598,7 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
     culture_3 = data.get("culture_3")
     genre_4 = data.get("genre_4")
     species_training_5 = data.get("species_training_5")
+    diagnosis = data.get("diagnosis")
 
     # Convert date to timestamp
     date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
@@ -590,6 +618,7 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
         service_type=service_type,
         date=date,
         sample=sample,
+        diagnosis=diagnosis,
         direct_2=direct_2,
         culture_3=culture_3,
         genre_4=genre_4,

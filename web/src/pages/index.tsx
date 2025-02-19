@@ -63,6 +63,7 @@ const HomePage = () => {
     direct_2: string;
     culture_3: string;
     genre_4: string;
+    diagnosis: string;
     species_training_5: string;
   }>({
     age: '',
@@ -76,6 +77,7 @@ const HomePage = () => {
     culture_3: '',
     genre_4: '',
     species_training_5: '',
+    diagnosis: '',
   });
   const [openHelpDialog, setOpenHelpDialog] = useState(false);
   const [results, setResults] =
@@ -92,6 +94,7 @@ const HomePage = () => {
     genre_4: string[];
     species_training_5: string[];
     sample: string[];
+    diagnosis: string[];
   }>({
     gender: [],
     address: [],
@@ -104,6 +107,7 @@ const HomePage = () => {
     genre_4: [],
     species_training_5: [],
     sample: [],
+    diagnosis: [],
   });
 
   useEffect(() => {
@@ -141,36 +145,7 @@ const HomePage = () => {
   };
 
   const handleClear = () => {
-    setFormData({
-      age: '',
-      sex: '',
-      address: '',
-      ward_en: '',
-      service_type: '',
-      date: null,
-      sample: '',
-      direct_2: '',
-      culture_3: '',
-      genre_4: '',
-      species_training_5: '',
-    });
     setResults(defaultResult);
-  };
-
-  const handleAutoFill = () => {
-    setFormData({
-      age: '18',
-      sex: options.gender[0] || '',
-      address: options.address[0] || '',
-      ward_en: options.ward[0] || '',
-      service_type: options.service_type[0] || '',
-      date: new Date(),
-      sample: options.sample[0] || '',
-      direct_2: options.direct_2[0] || '',
-      culture_3: options.culture_3[0] || '',
-      genre_4: options.genre_4[0] || '',
-      species_training_5: options.species_training_5[0] || '',
-    });
   };
 
   const handleExport = async () => {
@@ -463,6 +438,14 @@ const HomePage = () => {
                       <TextField {...params} label="Sample" name="sample" fullWidth size="small" />
                     )}
                   />
+                  <Autocomplete
+                    options={options.diagnosis}
+                    value={formData.diagnosis}
+                    onChange={(event, value) => handleAutocompleteChange('diagnosis', value)}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Diagnosis" name="diagnosis" fullWidth size="small" />
+                    )}
+                  />
                 </Box>
               </Card>
               <Card
@@ -547,7 +530,7 @@ const HomePage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Species Training 5"
+                        label="Species 5"
                         name="species_training_5"
                         fullWidth
                         size="small"
@@ -587,9 +570,7 @@ const HomePage = () => {
               >
                 Submit
               </LoadingButton>
-              {/* <Button variant="contained" color="secondary" onClick={handleAutoFill}>
-                Auto Fill
-              </Button> */}
+              
             </Stack>
           </Grid>
 

@@ -52,6 +52,7 @@ COPY server.py server.py
 COPY dataset dataset
 COPY database.py database.py
 COPY Calmette_data_v2.xlsx Calmette_data_v2.xlsx
+COPY antibiogram_dataset.xlsx antibiogram_dataset.xlsx
 COPY utils.py utils.py
 COPY random_forest_stage_1.joblib random_forest_stage_1.joblib
 COPY random_forest_stage_2.joblib random_forest_stage_2.joblib
