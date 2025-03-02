@@ -26,13 +26,18 @@ import axiosInstance from 'src/utils/axios';
 import * as XLSX from 'xlsx';
 import { HELP_CONTENTS } from 'src/utils/help-contents';
 import Scrollbar from 'src/components/scrollbar';
+import { getNestedStageOptions, getWardCases, options } from 'src/constants/options';
 
 const defaultResult = [
   { name: 'Amoxicilline', value: 0, isDefault: true },
   { name: 'Augmentin', value: 0, isDefault: true },
   { name: 'Oxacilline / cefazoline', value: 0, isDefault: true },
   { name: 'Tazocilline', value: 0, isDefault: true },
-  { name: 'Cefotaxime / ceftriaxone', value: 0, isDefault: true },
+  {
+    name: 'Cefotaxime / ceftriaxone',
+    value: 0,
+    isDefault: true,
+  },
   { name: 'Ceftazidime', value: 0, isDefault: true },
   { name: 'Cefepime', value: 0, isDefault: true },
   { name: 'Aztreonam', value: 0, isDefault: true },
@@ -47,16 +52,72 @@ const defaultResult = [
   { name: 'Vancomycine', value: 0, isDefault: true },
   { name: 'Rifampicine', value: 0, isDefault: true },
   { name: 'ClindamycineMacrolides', value: 0, isDefault: true },
+  { name: 'Macrolides', value: 0, isDefault: true },
+  { name: 'Metronidazole', value: 0, isDefault: true },
 ];
 
+const mappedResult = [
+  { name: 'Amoxicilline', label: 'Amoxicilline' },
+  { name: 'Augmentin', label: 'Amoxicilline /Acide Clavulanique' },
+  { name: 'Oxacilline / cefazoline', label: 'Oxacilline / Cefazoline' },
+  { name: 'Tazocilline', label: 'Piperacilline / Tazobactam' },
+  { name: 'Cefotaxime / ceftriaxone', label: 'Cefotaxime / Ceftriaxone' },
+  { name: 'Ceftazidime', label: 'Ceftazidime' },
+  { name: 'Cefepime', label: 'Cefepime' },
+  { name: 'Aztreonam', label: 'Aztreonam' },
+  { name: 'Imipenem', label: 'Imipenem' },
+  { name: 'Meropenem', label: 'Meropenem' },
+  { name: 'Ertapenem', label: 'Ertapenem' },
+  { name: 'Amikacine', label: 'Amikacine' },
+  { name: 'Gentamicine', label: 'Gentamicine' },
+  { name: 'Ciprofloxacine', label: 'Ciprofloxacine' },
+  { name: 'Levofloxacine', label: 'Levofloxacine' },
+  { name: 'Bactrim', label: 'Cotrimoxazole' },
+  { name: 'Vancomycine', label: 'Vancomycine' },
+  { name: 'Rifampicine', label: 'Rifampicine' },
+  { name: 'ClindamycineMacrolides', label: 'Clindamycine' },
+  { name: 'Macrolides', label: 'Macrolides' },
+  { name: 'Metronidazole', label: 'Metronidazole' },
+];
+
+const getResultLabel = (key: string): string => {
+  const v = mappedResult.find((x) => x.name === key);
+  if (v) {
+    return v.label;
+  }
+  return '';
+};
+
+const getSliceNumber = (totalCount: number, sliceCount: number) => {
+  if (totalCount % sliceCount === 0) {
+    return totalCount / sliceCount;
+  }
+  return Math.floor(totalCount / sliceCount) + 1;
+};
+
+const getSliceResult = (
+  results: { name: string; value: number; isDefault: boolean }[],
+  sliceCount: number
+) => {
+  const sliceNumber = getSliceNumber(results.length, sliceCount);
+  const sliceResults = [];
+  for (let i = 0; i < sliceNumber; i++) {
+    sliceResults.push(results.slice(i * sliceCount, (i + 1) * sliceCount));
+  }
+  return sliceResults;
+};
+
+const SLICE_COUNT = 7;
+
 const HomePage = () => {
+  const [tab, setTab] = useState<'input' | 'result'>('input');
   const [helpIndex, setHelpIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
-    age: string;
+    age: number | string;
     sex: string;
     address: string;
-    ward_en: string;
+    ward: string;
     service_type: string;
     date: Date | null;
     sample: string;
@@ -69,7 +130,7 @@ const HomePage = () => {
     age: '',
     sex: '',
     address: '',
-    ward_en: '',
+    ward: '',
     service_type: '',
     date: null,
     sample: '',
@@ -80,41 +141,10 @@ const HomePage = () => {
     diagnosis: '',
   });
   const [openHelpDialog, setOpenHelpDialog] = useState(false);
-  const [results, setResults] =
-    useState<{ name: string; value: number; isDefault: boolean }[]>(defaultResult);
-  const [options, setOptions] = useState<{
-    gender: string[];
-    address: string[];
-    ward: string[];
-    service_type: string[];
-    germe: string[];
-    contamination: string[];
-    direct_2: string[];
-    culture_3: string[];
-    genre_4: string[];
-    species_training_5: string[];
-    sample: string[];
-    diagnosis: string[];
-  }>({
-    gender: [],
-    address: [],
-    ward: [],
-    service_type: [],
-    germe: [],
-    contamination: [],
-    direct_2: [],
-    culture_3: [],
-    genre_4: [],
-    species_training_5: [],
-    sample: [],
-    diagnosis: [],
-  });
-
-  useEffect(() => {
-    axiosInstance.get('/api/options').then((response) => {
-      setOptions(response.data);
-    });
-  }, []);
+  const [results, setResults] = useState<{ name: string; value: number; isDefault: boolean }[][]>(
+    getSliceResult(defaultResult, SLICE_COUNT)
+  );
+  const [availableOptions, setAvailableOptions] = useState(options);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -140,18 +170,21 @@ const HomePage = () => {
       })
       .sort((a, b) => b.value - a.value);
 
-    setResults(results.map((r) => ({ ...r, isDefault: false })));
+    const _defaultResult = results.map((r) => ({ ...r, isDefault: false }));
+
+    setResults(getSliceResult(_defaultResult, SLICE_COUNT));
     setIsLoading(false);
+    setTab('result');
   };
 
   const handleClear = () => {
-    setResults(defaultResult);
+    setResults(getSliceResult(defaultResult, SLICE_COUNT));
   };
 
   const handleExport = async () => {
     const formDataSheet = XLSX.utils.json_to_sheet([formData]);
     const resultsSheet = XLSX.utils.json_to_sheet(
-      results.map((r) => ({
+      results.flat().map((r) => ({
         antibiotic: r.name,
         percentage: `${Math.round(r.value)}%`,
         status: Math.round(r.value) >= 50 ? 'S' : 'R',
@@ -169,10 +202,11 @@ const HomePage = () => {
     !formData.age ||
     !formData.sex ||
     !formData.address ||
-    !formData.ward_en ||
+    !formData.ward ||
     !formData.service_type ||
     !formData.date ||
-    !formData.sample;
+    !formData.sample ||
+    !formData.diagnosis;
 
   const disabledForm = disabledStage2;
 
@@ -351,8 +385,8 @@ const HomePage = () => {
             </Typography>
           </Grid>
           {/* Input Form */}
-          <Grid item xs={12} md={6}>
-            <Stack spacing={4}>
+          {tab === 'input' && (
+            <Grid item xs={12}>
               <Card
                 sx={{
                   p: 2,
@@ -369,25 +403,63 @@ const HomePage = () => {
                     gap: 2,
                   }}
                 >
+                  <Autocomplete
+                    options={availableOptions.ward}
+                    value={formData.ward}
+                    onChange={(event, value) => {
+                      handleAutocompleteChange('ward', value);
+                      setFormData((prev) => ({ ...prev, age: '', sex: '' }));
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Ward" name="ward" fullWidth size="small" />
+                    )}
+                  />
+                  <Autocomplete
+                    options={getWardCases(formData.ward).allowedGender}
+                    value={formData.sex}
+                    disabled={formData.ward === ''}
+                    onChange={(event, value) => handleAutocompleteChange('sex', value)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Sex"
+                        name="sex"
+                        fullWidth
+                        size="small"
+                        sx={{
+                          backgroundColor: formData.ward === '' ? alpha('#000', 0.05) : 'inherit',
+                          borderRadius: 1,
+                        }}
+                      />
+                    )}
+                  />
                   <TextField
                     label="Age"
                     name="age"
                     type="number"
                     value={formData.age}
+                    disabled={formData.ward === ''}
                     onChange={handleChange}
+                    onBlur={(e) => {
+                      if (Number(e.target.value) < 0) {
+                        setFormData({ ...formData, age: 0 });
+                      }
+
+                      const min = getWardCases(formData.ward).allowedMinAge;
+
+                      if (!(Number(e.target.value) >= min)) {
+                        setFormData({ ...formData, age: min });
+                      }
+                    }}
                     fullWidth
                     size="small"
+                    sx={{
+                      backgroundColor: formData.ward === '' ? alpha('#000', 0.05) : 'inherit',
+                      borderRadius: 1,
+                    }}
                   />
                   <Autocomplete
-                    options={options.gender}
-                    value={formData.sex}
-                    onChange={(event, value) => handleAutocompleteChange('sex', value)}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Sex" name="sex" fullWidth size="small" />
-                    )}
-                  />
-                  <Autocomplete
-                    options={options.address}
+                    options={availableOptions.address}
                     value={formData.address}
                     onChange={(event, value) => handleAutocompleteChange('address', value)}
                     renderInput={(params) => (
@@ -400,16 +472,9 @@ const HomePage = () => {
                       />
                     )}
                   />
+
                   <Autocomplete
-                    options={options.ward}
-                    value={formData.ward_en}
-                    onChange={(event, value) => handleAutocompleteChange('ward_en', value)}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Ward" name="ward_en" fullWidth size="small" />
-                    )}
-                  />
-                  <Autocomplete
-                    options={options.service_type}
+                    options={availableOptions.service_type}
                     value={formData.service_type}
                     onChange={(event, value) => handleAutocompleteChange('service_type', value)}
                     renderInput={(params) => (
@@ -429,9 +494,10 @@ const HomePage = () => {
                     slotProps={{
                       textField: { fullWidth: true, size: 'small' },
                     }}
+                    format="dd/MM/yyyy"
                   />
                   <Autocomplete
-                    options={options.sample}
+                    options={availableOptions.sample}
                     value={formData.sample}
                     onChange={(event, value) => handleAutocompleteChange('sample', value)}
                     renderInput={(params) => (
@@ -439,22 +505,22 @@ const HomePage = () => {
                     )}
                   />
                   <Autocomplete
-                    options={options.diagnosis}
+                    options={availableOptions.diagnosis}
                     value={formData.diagnosis}
                     onChange={(event, value) => handleAutocompleteChange('diagnosis', value)}
                     renderInput={(params) => (
-                      <TextField {...params} label="Diagnosis" name="diagnosis" fullWidth size="small" />
+                      <TextField
+                        {...params}
+                        label="Diagnosis"
+                        name="diagnosis"
+                        fullWidth
+                        size="small"
+                      />
                     )}
                   />
                 </Box>
-              </Card>
-              <Card
-                elevation={3}
-                sx={{
-                  p: 2,
-                }}
-              >
-                <Typography variant="h6" color="primary.main" gutterBottom>
+
+                <Typography variant="h6" color="primary.main" gutterBottom mt={2}>
                   Stage Form
                 </Typography>
                 <Box
@@ -465,9 +531,17 @@ const HomePage = () => {
                   }}
                 >
                   <Autocomplete
-                    options={options.direct_2}
+                    options={getNestedStageOptions()}
                     value={formData.direct_2}
-                    onChange={(event, value) => handleAutocompleteChange('direct_2', value)}
+                    onChange={(event, value) => {
+                      handleAutocompleteChange('direct_2', value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        culture_3: '',
+                        genre_4: '',
+                        species_training_5: '',
+                      }));
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -484,9 +558,16 @@ const HomePage = () => {
                     disabled={disabledStage2}
                   />
                   <Autocomplete
-                    options={options.culture_3}
+                    options={getNestedStageOptions(formData.direct_2)}
                     value={formData.culture_3}
-                    onChange={(event, value) => handleAutocompleteChange('culture_3', value)}
+                    onChange={(event, value) => {
+                      handleAutocompleteChange('culture_3', value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        genre_4: '',
+                        species_training_5: '',
+                      }));
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -503,9 +584,15 @@ const HomePage = () => {
                     disabled={!formData.direct_2}
                   />
                   <Autocomplete
-                    options={options.genre_4}
+                    options={getNestedStageOptions(formData.direct_2, formData.culture_3)}
                     value={formData.genre_4}
-                    onChange={(event, value) => handleAutocompleteChange('genre_4', value)}
+                    onChange={(event, value) => {
+                      handleAutocompleteChange('genre_4', value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        species_training_5: '',
+                      }));
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -522,7 +609,11 @@ const HomePage = () => {
                     disabled={!formData.culture_3}
                   />
                   <Autocomplete
-                    options={options.species_training_5}
+                    options={getNestedStageOptions(
+                      formData.direct_2,
+                      formData.culture_3,
+                      formData.genre_4
+                    )}
                     value={formData.species_training_5}
                     onChange={(event, value) =>
                       handleAutocompleteChange('species_training_5', value)
@@ -543,89 +634,89 @@ const HomePage = () => {
                     disabled={!formData.genre_4}
                   />
                 </Box>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  flexWrap="wrap"
+                  alignItems="center"
+                  justifyContent="flex-end"
+                  mt={2}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={handleClear}
+                    sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Clear All
+                  </Button>
+                  <LoadingButton
+                    variant="contained"
+                    onClick={handleSubmit}
+                    disabled={disabledForm}
+                    loading={isLoading}
+                    sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Submit
+                  </LoadingButton>
+                </Stack>
               </Card>
-            </Stack>
-
-            <Stack
-              direction="row"
-              spacing={2}
-              flexWrap="wrap"
-              alignItems="center"
-              justifyContent="flex-start"
-              mt={4}
-            >
-              <Button
-                variant="outlined"
-                onClick={handleClear}
-                sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
-              >
-                Clear All
-              </Button>
-              <LoadingButton
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={disabledForm}
-                loading={isLoading}
-                sx={{ px: 8, width: { xs: '100%', sm: 'auto' } }}
-              >
-                Submit
-              </LoadingButton>
-              
-            </Stack>
-          </Grid>
+            </Grid>
+          )}
 
           {/* Results Panel */}
-          <Grid item xs={12} md={6}>
-            <Card
-              elevation={3}
-              sx={{
-                p: 2,
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+          {tab === 'result' && (
+            <Grid item xs={12}>
+              <Stack direction="row" spacing={2} mb={2} alignItems="center">
                 <Typography variant="h6" color="primary.main">
                   Antibiotic Sensitivity Results
                 </Typography>
+                <Box flex={1} />
                 <Button
                   variant="outlined"
                   sx={{ px: 6 }}
                   onClick={handleExport}
-                  disabled={results.some((r) => r.isDefault)}
+                  disabled={results.flat().some((r) => r.isDefault)}
                 >
                   Export
                 </Button>
+                <Button variant="contained" sx={{ px: 6 }} onClick={() => setTab('input')}>
+                  Input Form
+                </Button>
               </Stack>
-              <Box mt={2}>
+
+              <Grid container spacing={2}>
                 {results.map((result, index) => (
-                  <Box key={index} mb={2}>
-                    <Typography>{result.name}</Typography>
-                    <Box display="flex" alignItems="center">
-                      <Box width="100%" mr={1}>
-                        <LinearProgress variant="determinate" value={result.value} />
+                  <Grid item xs={12} lg={4}>
+                    <Card
+                      elevation={3}
+                      sx={{
+                        p: 2,
+                      }}
+                    >
+                      <Box mt={2}>
+                        {result.map((result, index) => (
+                          <Box key={index} mb={2}>
+                            <Typography>{getResultLabel(result.name)}</Typography>
+                            <Box display="flex" alignItems="center">
+                              <Box width="100%" mr={1}>
+                                <LinearProgress variant="determinate" value={result.value} />
+                              </Box>
+                              <Box minWidth={35}>
+                                <Typography variant="body2" color="textSecondary">{`${Math.round(
+                                  result.value
+                                )}%`}</Typography>
+                              </Box>
+                            </Box>
+                          </Box>
+                        ))}
                       </Box>
-                      <Box minWidth={35}>
-                        <Typography variant="body2" color="textSecondary">{`${Math.round(
-                          result.value
-                        )}%`}</Typography>
-                      </Box>
-                    </Box>
-                  </Box>
+                    </Card>
+                  </Grid>
                 ))}
-              </Box>
-            </Card>
-            {/* <Stack
-              direction="row"
-              spacing={2}
-              flexWrap="wrap"
-              alignItems="center"
-              justifyContent="flex-end"
-              mt={4}
-            >
-              <Button variant="contained" onClick={handleResult}>
-                Clear Result
-              </Button>
-            </Stack> */}
-          </Grid>
+              </Grid>
+            </Grid>
+          )}
+
           <Grid item xs={12}>
             <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" mt={4}>
               <Typography variant="body2" textAlign="center">
