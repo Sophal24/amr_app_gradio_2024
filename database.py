@@ -1,40 +1,53 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 import os
 import bcrypt
+import time
+import logging
 
-uri = "mongodb://admin:admin@mongo:27017?authSource=admin"
-# uri = "mongodb://admin:admin@localhost:27017?authSource=admin"
+uri = os.environ.get("MONGODB_URI","mongodb://admin:admin@localhost:27017?authSource=admin")
 
+client = None
+db = None
 
-def get_db():
-    try:
-        client = MongoClient(uri)
-        db = client.amr
-        return db
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        return None
+def connect_to_db(attempts=3, delay=5):
+    global client, db
+    for attempt in range(attempts):
+        try:
+            logging.info(f"Connecting to database: {uri}")
+            client = MongoClient(uri)
+            db = client.amr
+            return
+        except errors.ConnectionFailure as e:
+            print(f"Database connection error: {e}")
+            time.sleep(delay)
+        except errors.OperationFailure as e:
+            print(f"Authentication error: {e}")
+            time.sleep(delay)
+    client = None
+    db = None
 
+connect_to_db()
 
 def verify_user(username, password):
-    db = get_db()
+    if client is None:
+        return None
     users = db.users
     user = users.find_one({"username": username})
     if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
         return user
     return None
 
-
 def create_user(username, password):
-    db = get_db()
+    if client is None:
+        return None
     users = db.users
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     user = users.insert_one({"username": username, "password": hashed_password})
     return user
 
-
 def seed_users():
-    db = get_db()
+    if client is None:
+        return
     users = db.users
     if users.count_documents({}) > 0:
         return
@@ -45,9 +58,9 @@ def seed_users():
     create_user("user@french_embassy", "fe@2025")
     create_user("user@marseille", "marseille@2025")
 
-
 def seed_locations():
-    db = get_db()
+    if client is None:
+        return
     locations = db.locations
     if locations.count_documents({}) > 0:
         return
@@ -69,17 +82,17 @@ def seed_locations():
         }
     )
 
-
 def create_activity(user_id, activity):
-    db = get_db()
+    if client is None:
+        return None
     activities = db.activities
     activity["user_id"] = user_id
     activity_id = activities.insert_one(activity)
     return activity_id
 
-
 def get_locations():
-    db = get_db()
+    if client is None:
+        return []
     locations = []
     for location in db.locations.find({}):
         locations.append(

@@ -924,7 +924,7 @@ const HomePage = () => {
                 color="primary"
                 sx={{ px: 6 }}
                 onClick={handleSaveFeedback}
-                disabled={feedbackFormData.agree === '' || feedbackFormData.comment === ''}
+                disabled={feedbackFormData.agree === ''}
               >
                 Save
               </Button>

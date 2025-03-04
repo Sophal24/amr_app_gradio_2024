@@ -8,7 +8,6 @@ from fastapi.staticfiles import StaticFiles
 
 from database import (
     create_activity,
-    get_db,
     get_locations,
     seed_locations,
     seed_users,
