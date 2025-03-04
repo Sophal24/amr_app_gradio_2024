@@ -11,4 +11,4 @@ push:
 deploy:
 	make build
 	make push
-	curl -X POST https://portainer.vishnu.samdy.pro/api/webhooks/4e697ca9-a479-454c-a432-e26fd604cf4b
+	curl -X POST https://portainer.vishnu.samdy.pro/api/webhooks/4bef9314-39e8-4ef3-84fd-694e9ba785d2

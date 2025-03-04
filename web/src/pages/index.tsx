@@ -95,6 +95,33 @@ const getSliceNumber = (totalCount: number, sliceCount: number) => {
   return Math.floor(totalCount / sliceCount) + 1;
 };
 
+type InputFormData = {
+  age: number | string;
+  sex: string;
+  address: string;
+  ward_en: string;
+  service_type: string;
+  date: Date | null;
+  sample: string;
+  direct_2: string;
+  culture_3: string;
+  genre_4: string;
+  diagnosis: string;
+  species_training_5: string;
+};
+
+type Result = {
+  name: string;
+  value: number;
+};
+
+type FeedbackFormData = {
+  agree: string | number;
+  comment: string;
+  inputs: InputFormData;
+  results: Result[];
+};
+
 const getSliceResult = (
   results: { name: string; value: number; isDefault: boolean }[],
   sliceCount: number
@@ -113,24 +140,11 @@ const HomePage = () => {
   const [tab, setTab] = useState<'input' | 'result'>('input');
   const [helpIndex, setHelpIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<{
-    age: number | string;
-    sex: string;
-    address: string;
-    ward: string;
-    service_type: string;
-    date: Date | null;
-    sample: string;
-    direct_2: string;
-    culture_3: string;
-    genre_4: string;
-    diagnosis: string;
-    species_training_5: string;
-  }>({
+  const [formData, setFormData] = useState<InputFormData>({
     age: '',
     sex: '',
     address: '',
-    ward: '',
+    ward_en: '',
     service_type: '',
     date: null,
     sample: '',
@@ -145,6 +159,13 @@ const HomePage = () => {
     getSliceResult(defaultResult, SLICE_COUNT)
   );
   const [availableOptions, setAvailableOptions] = useState(options);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackFormData, setFeedbackFormData] = useState<FeedbackFormData>({
+    agree: '',
+    comment: '',
+    inputs: formData,
+    results: results.flat().map((r) => ({ name: r.name, value: r.value })),
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -162,6 +183,12 @@ const HomePage = () => {
     setIsLoading(true);
     const res = await axiosInstance.post('/api/amr', formData);
 
+    setFeedbackFormData((prev) => ({
+      ...prev,
+      inputs: formData,
+      results: res.data.result_probab_dict,
+    }));
+
     const result = res.data.result_probab_dict;
     const results = Object.keys(result)
       .map((name) => {
@@ -175,10 +202,24 @@ const HomePage = () => {
     setResults(getSliceResult(_defaultResult, SLICE_COUNT));
     setIsLoading(false);
     setTab('result');
+    setShowFeedbackPopup(true);
   };
 
   const handleClear = () => {
-    setResults(getSliceResult(defaultResult, SLICE_COUNT));
+    setFormData({
+      age: '',
+      sex: '',
+      address: '',
+      ward_en: '',
+      service_type: '',
+      date: null,
+      sample: '',
+      direct_2: '',
+      culture_3: '',
+      genre_4: '',
+      species_training_5: '',
+      diagnosis: '',
+    });
   };
 
   const handleExport = async () => {
@@ -202,7 +243,7 @@ const HomePage = () => {
     !formData.age ||
     !formData.sex ||
     !formData.address ||
-    !formData.ward ||
+    !formData.ward_en ||
     !formData.service_type ||
     !formData.date ||
     !formData.sample ||
@@ -213,6 +254,35 @@ const HomePage = () => {
   const handleLogout = async () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     window.location.reload();
+  };
+
+  const handleSaveFeedback = async () => {
+    try {
+      setShowFeedbackPopup(false);
+      await axiosInstance.post('/api/save-feedback', feedbackFormData);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setFeedbackFormData({
+        agree: '',
+        comment: '',
+        inputs: {
+          age: '',
+          sex: '',
+          address: '',
+          ward_en: '',
+          service_type: '',
+          date: null,
+          sample: '',
+          direct_2: '',
+          culture_3: '',
+          genre_4: '',
+          species_training_5: '',
+          diagnosis: '',
+        },
+        results: defaultResult.map((r) => ({ name: r.name, value: r.value })),
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -405,19 +475,19 @@ const HomePage = () => {
                 >
                   <Autocomplete
                     options={availableOptions.ward}
-                    value={formData.ward}
+                    value={formData.ward_en}
                     onChange={(event, value) => {
-                      handleAutocompleteChange('ward', value);
+                      handleAutocompleteChange('ward_en', value);
                       setFormData((prev) => ({ ...prev, age: '', sex: '' }));
                     }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Ward" name="ward" fullWidth size="small" />
+                      <TextField {...params} label="Ward" name="ward_en" fullWidth size="small" />
                     )}
                   />
                   <Autocomplete
-                    options={getWardCases(formData.ward).allowedGender}
+                    options={getWardCases(formData.ward_en).allowedGender}
                     value={formData.sex}
-                    disabled={formData.ward === ''}
+                    disabled={formData.ward_en === ''}
                     onChange={(event, value) => handleAutocompleteChange('sex', value)}
                     renderInput={(params) => (
                       <TextField
@@ -427,7 +497,8 @@ const HomePage = () => {
                         fullWidth
                         size="small"
                         sx={{
-                          backgroundColor: formData.ward === '' ? alpha('#000', 0.05) : 'inherit',
+                          backgroundColor:
+                            formData.ward_en === '' ? alpha('#000', 0.05) : 'inherit',
                           borderRadius: 1,
                         }}
                       />
@@ -438,14 +509,14 @@ const HomePage = () => {
                     name="age"
                     type="number"
                     value={formData.age}
-                    disabled={formData.ward === ''}
+                    disabled={formData.ward_en === ''}
                     onChange={handleChange}
                     onBlur={(e) => {
                       if (Number(e.target.value) < 0) {
                         setFormData({ ...formData, age: 0 });
                       }
 
-                      const min = getWardCases(formData.ward).allowedMinAge;
+                      const min = getWardCases(formData.ward_en).allowedMinAge;
 
                       if (!(Number(e.target.value) >= min)) {
                         setFormData({ ...formData, age: min });
@@ -454,7 +525,7 @@ const HomePage = () => {
                     fullWidth
                     size="small"
                     sx={{
-                      backgroundColor: formData.ward === '' ? alpha('#000', 0.05) : 'inherit',
+                      backgroundColor: formData.ward_en === '' ? alpha('#000', 0.05) : 'inherit',
                       borderRadius: 1,
                     }}
                   />
@@ -521,7 +592,7 @@ const HomePage = () => {
                 </Box>
 
                 <Typography variant="h6" color="primary.main" gutterBottom mt={2}>
-                  Stage Form
+                  Microbiology Information
                 </Typography>
                 <Box
                   sx={{
@@ -545,7 +616,7 @@ const HomePage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Direct 2"
+                        label="Direct"
                         name="direct_2"
                         fullWidth
                         size="small"
@@ -571,7 +642,7 @@ const HomePage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Culture 3"
+                        label="Culture"
                         name="culture_3"
                         fullWidth
                         size="small"
@@ -596,7 +667,7 @@ const HomePage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Genre 4"
+                        label="Genre"
                         name="genre_4"
                         fullWidth
                         size="small"
@@ -621,7 +692,7 @@ const HomePage = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Species 5"
+                        label="Species"
                         name="species_training_5"
                         fullWidth
                         size="small"
@@ -726,6 +797,140 @@ const HomePage = () => {
             </Stack>
           </Grid>
         </Grid>
+        <Stack
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            bgcolor: 'background.paper',
+            boxShadow: 6,
+            zIndex: 1000,
+            width: '360px',
+            borderRadius: 2,
+            overflow: 'hidden',
+            transition: 'all 0.5s ease-in-out',
+            transform: showFeedbackPopup ? 'translateY(0)' : 'translateY(110%)',
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{
+              backgroundColor: 'primary.main',
+              pl: 2,
+              py: 1,
+              pr: 1,
+              color: 'white',
+            }}
+          >
+            <Typography variant="subtitle1" textAlign="center">
+              Result Report
+            </Typography>
+            <Box flex={1} />
+            <IconButton onClick={() => setShowFeedbackPopup(false)}>
+              <Iconify icon="mdi:close" width={24} color="white" />
+            </IconButton>
+          </Stack>
+          <Stack p={2} spacing={2}>
+            <Typography variant="body2" textAlign="center">
+              Fill result report with a thumbs-up/thumbs-down and a comment. Click 'Save'.
+            </Typography>
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              justifyContent="center"
+              sx={{
+                height: '40px',
+                '& > svg': {
+                  cursor: 'pointer',
+                },
+              }}
+            >
+              {feedbackFormData.agree === 1 ? (
+                <svg
+                  width="35"
+                  height="30"
+                  viewBox="0 0 35 30"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18.68 1.08995L10.37 9.39995C9.815 9.95495 9.5 10.72 9.5 11.515V26.5C9.5 28.15 10.85 29.5 12.5 29.5H26C27.2 29.5 28.28 28.78 28.76 27.685L33.65 16.27C34.91 13.3 32.735 9.99995 29.51 9.99995H21.035L22.46 3.12995C22.61 2.37995 22.385 1.61495 21.845 1.07495C20.96 0.204953 19.55 0.204953 18.68 1.08995ZM3.5 29.5C5.15 29.5 6.5 28.15 6.5 26.5V14.5C6.5 12.85 5.15 11.5 3.5 11.5C1.85 11.5 0.5 12.85 0.5 14.5V26.5C0.5 28.15 1.85 29.5 3.5 29.5Z"
+                    fill="#4589F0"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  onClick={() => setFeedbackFormData((prev) => ({ ...prev, agree: 1 }))}
+                >
+                  <path
+                    d="M12.0002 28H24.0002C25.1068 28 26.0535 27.3333 26.4535 26.3733L30.4802 16.9733C30.6002 16.6667 30.6668 16.3467 30.6668 16V13.3333C30.6668 11.8667 29.4668 10.6667 28.0002 10.6667H19.5868L20.8535 4.57334L20.8935 4.14668C20.8935 3.60001 20.6668 3.09334 20.3068 2.73334L18.8935 1.33334L10.1068 10.12C9.62683 10.6 9.3335 11.2667 9.3335 12V25.3333C9.3335 26.8 10.5335 28 12.0002 28ZM12.0002 12L17.7868 6.21334L16.0002 13.3333H28.0002V16L24.0002 25.3333H12.0002V12ZM1.3335 12H6.66683V28H1.3335V12Z"
+                    fill="#4589F0"
+                  />
+                </svg>
+              )}
+
+              {feedbackFormData.agree === 0 ? (
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 36 36"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.5 24C3.7 24 3 23.7 2.4 23.1C1.8 22.5 1.5 21.8 1.5 21V18C1.5 17.825 1.5185 17.6375 1.5555 17.4375C1.5925 17.2375 1.649 17.05 1.725 16.875L6.225 6.3C6.45 5.8 6.825 5.375 7.35 5.025C7.875 4.675 8.425 4.5 9 4.5H21C21.825 4.5 22.5315 4.7935 23.1195 5.3805C23.7075 5.9675 24.001 6.674 24 7.5V22.7625C24 23.1625 23.919 23.544 23.757 23.907C23.595 24.27 23.376 24.5885 23.1 24.8625L14.9625 32.9625C14.5875 33.3125 14.144 33.525 13.632 33.6C13.12 33.675 12.626 33.5875 12.15 33.3375C11.674 33.0875 11.3305 32.7375 11.1195 32.2875C10.9085 31.8375 10.8645 31.375 10.9875 30.9L12.675 24H4.5ZM30 4.5C30.825 4.5 31.5315 4.794 32.1195 5.382C32.7075 5.97 33.001 6.676 33 7.5V21C33 21.825 32.7065 22.5315 32.1195 23.1195C31.5325 23.7075 30.826 24.001 30 24C29.174 23.999 28.468 23.7055 27.882 23.1195C27.296 22.5335 27.002 21.827 27 21V7.5C27 6.675 27.294 5.969 27.882 5.382C28.47 4.795 29.176 4.501 30 4.5Z"
+                    fill="#EB5151"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  onClick={() => setFeedbackFormData((prev) => ({ ...prev, agree: 0 }))}
+                >
+                  <path
+                    d="M25.3335 20V4H30.6668V20H25.3335ZM20.0002 4C20.7074 4 21.3857 4.28095 21.8858 4.78105C22.3859 5.28115 22.6668 5.95942 22.6668 6.66667V20C22.6668 20.7333 22.3735 21.4 21.8802 21.88L13.1068 30.6667L11.6935 29.2533C11.3335 28.8933 11.1068 28.4 11.1068 27.84L11.1468 27.4267L12.4135 21.3333H4.00016C3.29292 21.3333 2.61464 21.0524 2.11454 20.5523C1.61445 20.0522 1.3335 19.3739 1.3335 18.6667V16C1.3335 15.6533 1.40016 15.3333 1.52016 15.0267L5.54683 5.62667C5.94683 4.66667 6.8935 4 8.00016 4H20.0002ZM20.0002 6.66667H7.96016L4.00016 16V18.6667H15.7068L14.2002 25.76L20.0002 19.96V6.66667Z"
+                    fill="#EB5151"
+                  />
+                </svg>
+              )}
+            </Stack>
+            <TextField
+              placeholder="Write a comment…"
+              variant="outlined"
+              fullWidth
+              multiline
+              rows={4}
+              value={feedbackFormData.comment}
+              onChange={(e) =>
+                setFeedbackFormData({ ...feedbackFormData, comment: e.target.value })
+              }
+            />
+            <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ px: 6 }}
+                onClick={handleSaveFeedback}
+                disabled={feedbackFormData.agree === '' || feedbackFormData.comment === ''}
+              >
+                Save
+              </Button>
+            </Stack>
+          </Stack>
+        </Stack>
       </Container>
     </LocalizationProvider>
   );

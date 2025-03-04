@@ -81,11 +81,14 @@ def amr_project(
     genre_4,
     species_5,
 ):
-
     # Convert timestamp to a datetime object
     date_time = datetime.fromtimestamp(date)
     # Extract the month
     month = date_time.month
+
+    result_probab_dict = dict()
+    result_class_dict = dict()
+    df_info = pd.DataFrame()
 
     # Stage 5
     if (
@@ -317,7 +320,6 @@ def amr_project(
 
     return df_info, result_probab_dict
 
-
 def process_input(input_text):
     if not input_text.strip():
         return "Error: Input is required. Please provide a value."
@@ -369,45 +371,47 @@ class JWTBearer(HTTPBearer):
 
 @app.post("/api/amr")
 def amr_api(data: dict, token: str = Depends(JWTBearer())):
-    age = data.get("age")
-    sex = data.get("sex")
-    address = data.get("address")
-    ward_en = data.get("ward_en")
-    service_type = data.get("service_type")
-    date = data.get("date")
-    sample = data.get("sample")
-    direct_2 = data.get("direct_2")
-    culture_3 = data.get("culture_3")
-    genre_4 = data.get("genre_4")
-    species_training_5 = data.get("species_training_5")
-    diagnosis = data.get("diagnosis")
+    try:
+        age = data.get("age")
+        sex = data.get("sex")
+        address = data.get("address")
+        ward_en = data.get("ward_en")
+        service_type = data.get("service_type")
+        date = data.get("date")
+        sample = data.get("sample")
+        direct_2 = data.get("direct_2")
+        culture_3 = data.get("culture_3")
+        genre_4 = data.get("genre_4")
+        species_training_5 = data.get("species_training_5")
+        diagnosis = data.get("diagnosis")
 
-    # Convert date to timestamp
-    date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+        # Convert date to timestamp
+        date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
 
-    # Decode the token to get the user information
-    payload = jwt.decode(token, "secret", algorithms=["HS256"])
-    user_id = payload.get("user_id")
+        # Decode the token to get the user information
+        payload = jwt.decode(token, "secret", algorithms=["HS256"])
+        user_id = payload.get("user_id")
 
-    # Store user input
-    create_activity(user_id, data)
+        # Store user input
+        create_activity(user_id, data)
+        df_info, result_probab_dict = amr_project(
+            age=age,
+            sex=sex,
+            address=address,
+            ward_en=ward_en,
+            service_type=service_type,
+            date=date,
+            sample=sample,
+            diagnosis=diagnosis,
+            direct_2=direct_2,
+            culture_3=culture_3,
+            genre_4=genre_4,
+            species_5=species_training_5,
+        )
 
-    df_info, result_probab_dict = amr_project(
-        age=age,
-        sex=sex,
-        address=address,
-        ward_en=ward_en,
-        service_type=service_type,
-        date=date,
-        sample=sample,
-        diagnosis=diagnosis,
-        direct_2=direct_2,
-        culture_3=culture_3,
-        genre_4=genre_4,
-        species_5=species_training_5,
-    )
-
-    return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}
+        return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/api/login")
@@ -430,6 +434,27 @@ def login(data: dict):
 def allowed_locations():
     locations = get_locations()
     return locations
+
+@app.post("/api/save-feedback")
+def save_feedback(data: dict, token: str = Depends(JWTBearer())):
+    try:
+        feedback = {
+            "agree": data.get("agree"),
+            "comment": data.get("comment"),
+            "inputs": data.get("inputs"),
+            "results": data.get("results"),
+        }
+
+        # Decode the token to get the user information
+        payload = jwt.decode(token, "secret", algorithms=["HS256"])
+        user_id = payload.get("user_id")
+
+        # Store feedback
+        create_activity(user_id, feedback)
+
+        return {"message": "Feedback saved successfully"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 app.mount("/", StaticFiles(directory="./web/dist", html=True), name="web")
