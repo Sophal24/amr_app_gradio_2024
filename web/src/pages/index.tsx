@@ -805,7 +805,7 @@ const HomePage = () => {
             bgcolor: 'background.paper',
             boxShadow: 6,
             zIndex: 1000,
-            width: '360px',
+            width: { xs: '100%', sm: '460px', md: '560px', lg: '620px' },
             borderRadius: 2,
             overflow: 'hidden',
             transition: 'all 0.5s ease-in-out',
@@ -833,7 +833,7 @@ const HomePage = () => {
               <Iconify icon="mdi:close" width={24} color="white" />
             </IconButton>
           </Stack>
-          <Stack p={2} spacing={2}>
+          <Stack p={2} spacing={1}>
             <Typography variant="body2" textAlign="center">
               Fill result report with a thumbs-up/thumbs-down and a comment. Click 'Save'.
             </Typography>
@@ -843,7 +843,7 @@ const HomePage = () => {
               alignItems="center"
               justifyContent="center"
               sx={{
-                height: '40px',
+                height: '36px',
                 '& > svg': {
                   cursor: 'pointer',
                 },
@@ -912,7 +912,7 @@ const HomePage = () => {
               variant="outlined"
               fullWidth
               multiline
-              rows={4}
+              rows={1}
               value={feedbackFormData.comment}
               onChange={(e) =>
                 setFeedbackFormData({ ...feedbackFormData, comment: e.target.value })

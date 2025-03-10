@@ -42,7 +42,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URI=mongodb://admin:admin@mongo:27017/amr
+      - MONGODB_URI=mongodb://admin:admin@mongo:27017/amr?authSource=admin
       - PORT=8000
       - DEBUG=False
     depends_on:
