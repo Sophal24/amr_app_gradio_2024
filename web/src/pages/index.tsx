@@ -439,10 +439,10 @@ const HomePage = () => {
               flexWrap="wrap"
             >
               <Box component="img" src="/logo/uhs-logo.png" alt="logo" height={64} />
-              <Box component="img" src="/logo/cadt-logo.png" alt="logo" height={64} />
-              <Box component="img" src="/logo/logo_full.svg" alt="logo" height={64} />
-              <Box component="img" src="/logo/IMG_5721.PNG" alt="logo" height={64} />
               <Box component="img" src="/logo/IMG_5722.JPG" alt="logo" height={64} />
+              <Box component="img" src="/logo/cadt-logo.png" alt="logo" height={64} />
+              <Box component="img" src="/logo/IMG_5721.PNG" alt="logo" height={64} />
+              <Box component="img" src="/logo/IMG000.jpg" alt="logo" height={64} />
             </Stack>
           </Grid>
           <Grid item xs={12}>
@@ -451,7 +451,7 @@ const HomePage = () => {
               resistance and susceptibility using patient data
             </Typography>
             <Typography variant="body2" textAlign="center">
-              and microbial information, helping combat Antimicrobial Resistance <b>(AMR)</b>.
+              and microbial information, helping combat Antimicrobial Resistance <b>(CAMPRA)</b>.
             </Typography>
           </Grid>
           {/* Input Form */}

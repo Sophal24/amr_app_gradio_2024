@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
                     }}
                   />
                   <Typography variant="h4" component="h1" gutterBottom>
-                    Welcome to AMR
+                    Welcome to CAMPRA
                   </Typography>
                   <Typography variant="body1" gutterBottom>
                     Clinical Decision Support System
