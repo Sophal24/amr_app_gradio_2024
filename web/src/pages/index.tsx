@@ -399,11 +399,12 @@ const HomePage = () => {
                 color: 'primary.main',
               }}
             >
-              <Iconify
-                icon="healthicons:biomarker-24px"
+              <Box
+                component="img"
+                src="/logo/Logo AMR.png"
                 width={32}
                 sx={{
-                  transform: 'rotate(45deg)',
+                  m: 'auto',
                 }}
               />
               <Typography

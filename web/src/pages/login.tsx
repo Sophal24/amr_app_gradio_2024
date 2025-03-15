@@ -130,24 +130,25 @@ const LoginPage: React.FC = () => {
                 spacing={2}
               >
                 <Stack>
-                  <Iconify
-                    icon="healthicons:biomarker-24px"
+                  <Box
+                    component="img"
+                    src="/logo/Logo AMR.png"
                     width={120}
                     sx={{
-                      transform: 'rotate(45deg)',
                       m: 'auto',
+                      mb: 2,
                     }}
                   />
                   <Typography variant="h4" component="h1" gutterBottom>
                     Welcome to CAMPRA
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    Clinical Decision Support System
+                    Cambodia AMR Predicting Application
                   </Typography>
                 </Stack>
                 <Typography variant="body2">
-                  Enhance antimicrobial prescribing with AI-driven insights. Login to access
-                  real-time sensitivity predictions and support better patient outcomes.
+                  Clinical Decision Support System using Machine Learning with Artificial
+                  Intelligence.
                 </Typography>
               </Stack>
             </Stack>
