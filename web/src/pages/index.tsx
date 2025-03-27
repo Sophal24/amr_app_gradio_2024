@@ -1,32 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import { LoadingButton } from '@mui/lab';
 import {
-  Box,
-  Grid,
-  TextField,
-  MenuItem,
-  Button,
-  Typography,
-  Slider,
-  Container,
-  Stack,
-  Card,
-  Theme,
   Autocomplete,
-  LinearProgress,
+  Box,
+  Button,
+  Card,
+  Container,
   Dialog,
+  Grid,
   IconButton,
+  LinearProgress,
+  Stack,
+  TextField,
+  Theme,
   Tooltip,
+  Typography,
 } from '@mui/material';
+import { alpha } from '@mui/system';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import React, { useState } from 'react';
 import Iconify from 'src/components/iconify';
-import { alpha } from '@mui/system';
-import { LoadingButton } from '@mui/lab';
-import axiosInstance from 'src/utils/axios';
-import * as XLSX from 'xlsx';
-import { HELP_CONTENTS } from 'src/utils/help-contents';
 import Scrollbar from 'src/components/scrollbar';
 import { getNestedStageOptions, getWardCases, options } from 'src/constants/options';
+import axiosInstance from 'src/utils/axios';
+import { HELP_CONTENTS } from 'src/utils/help-contents';
+import * as XLSX from 'xlsx';
 
 const defaultResult = [
   { name: 'Amoxicilline', value: 0, isDefault: true },
@@ -100,7 +98,6 @@ type InputFormData = {
   sex: string;
   address: string;
   ward_en: string;
-  service_type: string;
   date: Date | null;
   sample: string;
   direct_2: string;
@@ -145,7 +142,6 @@ const HomePage = () => {
     sex: '',
     address: '',
     ward_en: '',
-    service_type: '',
     date: null,
     sample: '',
     direct_2: '',
@@ -211,7 +207,6 @@ const HomePage = () => {
       sex: '',
       address: '',
       ward_en: '',
-      service_type: '',
       date: null,
       sample: '',
       direct_2: '',
@@ -244,7 +239,6 @@ const HomePage = () => {
     !formData.sex ||
     !formData.address ||
     !formData.ward_en ||
-    !formData.service_type ||
     !formData.date ||
     !formData.sample ||
     !formData.diagnosis;
@@ -269,7 +263,6 @@ const HomePage = () => {
           sex: '',
           address: '',
           ward_en: '',
-          service_type: '',
           date: null,
           sample: '',
           direct_2: '',
@@ -413,7 +406,7 @@ const HomePage = () => {
                   fontSize: { xs: '1rem', md: '1.5rem' },
                 }}
               >
-                Antibiotic Sensitivity Analysis
+                Cambodia AMR Predicting Application
               </Typography>
               <Box flexGrow={1} />
               <Button
@@ -539,21 +532,6 @@ const HomePage = () => {
                         {...params}
                         label="Address"
                         name="address"
-                        fullWidth
-                        size="small"
-                      />
-                    )}
-                  />
-
-                  <Autocomplete
-                    options={availableOptions.service_type}
-                    value={formData.service_type}
-                    onChange={(event, value) => handleAutocompleteChange('service_type', value)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Service Type"
-                        name="service_type"
                         fullWidth
                         size="small"
                       />
