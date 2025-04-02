@@ -1,55 +1,50 @@
-from pymongo import MongoClient, errors
+import redis
 import os
 import bcrypt
 import time
 import logging
+import json
 
-uri = os.environ.get("MONGODB_URI","mongodb://admin:admin@localhost:27017?authSource=admin")
-
-client = None
-db = None
+redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+redis_client = None
 
 def connect_to_db(attempts=3, delay=5):
-    global client, db
-    for attempt in range(attempts):
+    global redis_client
+    for _attempt in range(attempts):
         try:
-            logging.info(f"Connecting to database: {uri}")
-            client = MongoClient(uri)
-            db = client.amr
+            logging.info(f"Connecting to Redis: {redis_url}")
+            redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True)
+            redis_client.ping()  # Test connection
             return
-        except errors.ConnectionFailure as e:
-            print(f"Database connection error: {e}")
+        except redis.ConnectionError as e:
+            print(f"Redis connection error: {e}")
             time.sleep(delay)
-        except errors.OperationFailure as e:
-            print(f"Authentication error: {e}")
-            time.sleep(delay)
-    client = None
-    db = None
+    redis_client = None
 
 connect_to_db()
 
 def verify_user(username, password):
-    if client is None:
+    if redis_client is None:
         return None
-    users = db.users
-    user = users.find_one({"username": username})
-    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
-        return user
+    user_data = redis_client.hgetall(f"user:{username}")
+    if user_data and bcrypt.checkpw(password.encode("utf-8"), user_data["password"].encode("utf-8")):
+        return user_data
     return None
 
 def create_user(username, password):
-    if client is None:
+    if redis_client is None:
         return None
-    users = db.users
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-    user = users.insert_one({"username": username, "password": hashed_password})
-    return user
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    user_key = f"user:{username}"
+    if redis_client.exists(user_key):
+        return None  # User already exists
+    redis_client.hset(user_key, mapping={"username": username, "password": hashed_password})
+    return {"username": username}
 
 def seed_users():
-    if client is None:
+    if redis_client is None:
         return
-    users = db.users
-    if users.count_documents({}) > 0:
+    if redis_client.keys("user:*"):
         return
 
     create_user("user@cadt", "cadt@2025")
@@ -59,49 +54,49 @@ def seed_users():
     create_user("user@marseille", "marseille@2025")
 
 def seed_locations():
-    if client is None:
+    if redis_client is None:
         return
-    locations = db.locations
-    if locations.count_documents({}) > 0:
+    if redis_client.keys("location:*"):
         return
 
-    locations.insert_one(
-        {
-            "name": "Calmette Hospital",
-            "lat": 11.581396075915201,
-            "lng": 104.91654819669195,
-            "allowed_distance": 1000,
-        }
+    redis_client.set(
+        "location:Calmette Hospital",
+        json.dumps(
+            {
+                "name": "Calmette Hospital",
+                "lat": 11.581396075915201,
+                "lng": 104.91654819669195,
+                "allowed_distance": 1000,
+            }
+        ),
     )
-    locations.insert_one(
-        {
-            "name": "CADT",
-            "lat": 11.654651435959629,
-            "lng": 104.91148097840758,
-            "allowed_distance": 1000,
-        }
+    redis_client.set(
+        "location:CADT",
+        json.dumps(
+            {
+                "name": "CADT",
+                "lat": 11.654651435959629,
+                "lng": 104.91148097840758,
+                "allowed_distance": 1000,
+            }
+        ),
     )
 
 def create_activity(user_id, activity):
-    if client is None:
+    if redis_client is None:
         return None
-    activities = db.activities
+    activity_id = redis_client.incr("activity:id")
+    activity_key = f"activity:{activity_id}"
     activity["user_id"] = user_id
-    activity_id = activities.insert_one(activity)
+    redis_client.set(activity_key, json.dumps(activity))
     return activity_id
 
 def get_locations():
-    if client is None:
+    if redis_client is None:
         return []
     locations = []
-    for location in db.locations.find({}):
-        locations.append(
-            {
-                "name": location.get("name"),
-                "lat": location.get("lat"),
-                "lng": location.get("lng"),
-                "allowed_distance": location.get("allowed_distance"),
-                "_id": location.get("_id").__str__(),
-            }
-        )
+    for key in redis_client.keys("location:*"):
+        location = json.loads(redis_client.get(key))
+        location["_id"] = key.split(":")[1]
+        locations.append(location)
     return locations
