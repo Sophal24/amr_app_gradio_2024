@@ -12,6 +12,7 @@ from database import (
     seed_locations,
     seed_users,
     verify_user,
+    setup_table
 )
 import jwt
 from fastapi import Request, HTTPException
@@ -396,7 +397,9 @@ def login(data: dict):
 
     user = verify_user(username, password)
 
-    user_id = user.get("_id").__str__()
+    print(user)
+    user_id = user.get("id") if user else None
+    print(user_id)
 
     if user:
         token = jwt.encode({"user_id": user_id}, "secret", algorithm="HS256")
@@ -438,6 +441,7 @@ if __name__ == "__main__":
     import uvicorn
     import os
 
+    setup_table()
     seed_users()
     seed_locations()
 

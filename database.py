@@ -1,102 +1,155 @@
-import redis
+import psycopg2
+from psycopg2 import sql
 import os
 import bcrypt
 import time
 import logging
 import json
 
-redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
-redis_client = None
+# PostgreSQL connection details
+postgres_url = os.environ.get("POSTGRES_URL", "dbname=amr_app user=postgres password=postgres host=localhost")
+conn = None
+
 
 def connect_to_db(attempts=3, delay=5):
-    global redis_client
+    global conn
     for _attempt in range(attempts):
         try:
-            logging.info(f"Connecting to Redis: {redis_url}")
-            redis_client = redis.StrictRedis.from_url(redis_url, decode_responses=True)
-            redis_client.ping()  # Test connection
+            logging.info(f"Connecting to PostgreSQL: {postgres_url}")
+            conn = psycopg2.connect(postgres_url)
             return
-        except redis.ConnectionError as e:
-            print(f"Redis connection error: {e}")
+        except psycopg2.OperationalError as e:
+            print(f"PostgreSQL connection error: {e}")
             time.sleep(delay)
-    redis_client = None
+    conn = None
 
 connect_to_db()
 
 def verify_user(username, password):
-    if redis_client is None:
+    if conn is None:
         return None
-    user_data = redis_client.hgetall(f"user:{username}")
-    if user_data and bcrypt.checkpw(password.encode("utf-8"), user_data["password"].encode("utf-8")):
-        return user_data
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, username, password FROM users WHERE username = %s", (username,))
+        user_data = cur.fetchone()
+        if user_data and bcrypt.checkpw(password.encode("utf-8"), user_data[2].encode("utf-8")):
+            return {"id": user_data[0], "username": user_data[1]}
     return None
 
 def create_user(username, password):
-    if redis_client is None:
+    if conn is None:
         return None
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-    user_key = f"user:{username}"
-    if redis_client.exists(user_key):
-        return None  # User already exists
-    redis_client.hset(user_key, mapping={"username": username, "password": hashed_password})
-    return {"username": username}
+    with conn.cursor() as cur:
+        try:
+            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, hashed_password))
+            conn.commit()
+            return {"username": username}
+        except psycopg2.IntegrityError:
+            conn.rollback()
+            return None  # User already exists
 
 def seed_users():
-    if redis_client is None:
+    if conn is None:
         return
-    if redis_client.keys("user:*"):
-        return
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM users LIMIT 1")
+        if cur.fetchone():
+            return
 
-    create_user("user@cadt", "cadt@2025")
-    create_user("user@uhs", "uhs@2025")
-    create_user("user@calmette", "calmette@2025")
-    create_user("user@french_embassy", "fe@2025")
-    create_user("user@marseille", "marseille@2025")
+        users = [
+            ("user@cadt", "cadt@2025"),
+            ("user@uhs", "uhs@2025"),
+            ("user@calmette", "calmette@2025"),
+            ("user@french_embassy", "fe@2025"),
+            ("user@marseille", "marseille@2025"),
+        ]
+        for username, password in users:
+            create_user(username, password)
 
 def seed_locations():
-    if redis_client is None:
+    if conn is None:
         return
-    if redis_client.keys("location:*"):
-        return
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM locations LIMIT 1")
+        if cur.fetchone():
+            return
 
-    redis_client.set(
-        "location:Calmette Hospital",
-        json.dumps(
-            {
-                "name": "Calmette Hospital",
-                "lat": 11.581396075915201,
-                "lng": 104.91654819669195,
-                "allowed_distance": 1000,
-            }
-        ),
-    )
-    redis_client.set(
-        "location:CADT",
-        json.dumps(
-            {
-                "name": "CADT",
-                "lat": 11.654651435959629,
-                "lng": 104.91148097840758,
-                "allowed_distance": 1000,
-            }
-        ),
-    )
+        locations = [
+            ("Calmette Hospital", 11.581396075915201, 104.91654819669195, 1000),
+            ("CADT", 11.654651435959629, 104.91148097840758, 1000),
+        ]
+        for name, lat, lng, allowed_distance in locations:
+            cur.execute(
+                "INSERT INTO locations (name, lat, lng, allowed_distance) VALUES (%s, %s, %s, %s)",
+                (name, lat, lng, allowed_distance),
+            )
+        conn.commit()
 
 def create_activity(user_id, activity):
-    if redis_client is None:
+    if conn is None or user_id is None:
+        logging.error("Invalid user_id or database connection is not established.")
         return None
-    activity_id = redis_client.incr("activity:id")
-    activity_key = f"activity:{activity_id}"
-    activity["user_id"] = user_id
-    redis_client.set(activity_key, json.dumps(activity))
-    return activity_id
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO activities (user_id, activity_data) VALUES (%s, %s) RETURNING id",
+            (user_id, json.dumps(activity)),
+        )
+        conn.commit()
+        return cur.fetchone()[0]
 
 def get_locations():
-    if redis_client is None:
+    if conn is None:
         return []
-    locations = []
-    for key in redis_client.keys("location:*"):
-        location = json.loads(redis_client.get(key))
-        location["_id"] = key.split(":")[1]
-        locations.append(location)
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, name, lat, lng, allowed_distance FROM locations")
+        locations = [
+            {
+                "_id": row[0],
+                "name": row[1],
+                "lat": row[2],
+                "lng": row[3],
+                "allowed_distance": row[4],
+            }
+            for row in cur.fetchall()
+        ]
     return locations
+
+
+def setup_table():
+    if conn is None:
+        return
+    with conn.cursor() as cur:
+        try:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS locations (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    lat FLOAT NOT NULL,
+                    lng FLOAT NOT NULL,
+                    allowed_distance INT NOT NULL
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS activities (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT REFERENCES users(id),
+                    activity_data JSONB NOT NULL
+                );
+                """
+            )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            logging.error(f"Error setting up tables: {e}")

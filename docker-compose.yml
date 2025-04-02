@@ -1,11 +1,15 @@
 services:
-  redis:
-    image: redis:latest
-    container_name: redis
+  postgres:
+    image: postgres:17
+    container_name: postgres
     ports:
-      - "6379:6379"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: amr_app
     volumes:
-      - redis_data:/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - amr
 
@@ -15,20 +19,20 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8000:80"
     environment:
-      - REDIS_URL=redis://redis:6379
-      - PORT=8000
+      - POSTGRES_URL=dbname=amr_app user=postgres password=postgres host=postgres port=5432
       - DEBUG=False
-    depends_on:
-      - redis
+      - PORT=80
     networks:
       - amr
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   amr:
     driver: bridge
-
-volumes:
-  redis_data:
-    driver: local
