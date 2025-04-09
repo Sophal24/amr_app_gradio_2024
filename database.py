@@ -5,6 +5,10 @@ import bcrypt
 import time
 import logging
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv()
 
 # PostgreSQL connection details
 postgres_url = os.environ.get("POSTGRES_URL", "dbname=amr_app user=postgres password=postgres host=localhost")
