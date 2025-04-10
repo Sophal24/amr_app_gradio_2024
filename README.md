@@ -1,38 +1,36 @@
-# AMR Project Application
+# AMR Project - Web Applications
+This system composes of Website, API, and Database that you can install in a single line of command.
 
-### Please download the model here
+## Technologies
+1. **Website**
+   - ReactJS
+   - Typescript
+   - Material UI
+2. **API**
+   - Python 3.9.13 (Prefered)
+   - FastAPI framework
+3. **Database**
+   - Postgres 17
 
-1. Download the model and unzip it from [Download Link](https://cadtedu-my.sharepoint.com/:f:/g/personal/sophal_thear_cadt_edu_kh/Ejs-4-kZpA9HqHu6aGnCT_YBinA9iDM1v8CfF9l97kFcjQ?e=xdv6Cp).
-2. Move all the model files to the root directory of the project.
-3. The model files should be in the same directory as the `server.py` file.
-4. The model files should be in the following format:
-   - `random_forest_stage_1.joblib`
-   - `random_forest_stage_2.joblib`
-   - `random_forest_stage_3.joblib`
-   - `random_forest_stage_4.joblib`
-   - `random_forest_stage_5.joblib`
+## Requirements
+### 1. Machine Learning Model
+You need to download the machine learning model and extract into the corresponding directory as follow:
 
-## How to Run the Application
+1. Download the model and unzip it from [Download Link](https://cadtedu-my.sharepoint.com/:f:/g/personal/sophal_thear_cadt_edu_kh/Ejs-4-kZpA9HqHu6aGnCT_YBinA9iDM1v8CfF9l97kFcjQ?e=xdv6Cp). There are several machine learning model files such as: `random_forest_stage_1.joblib`, `random_forest_stage_2.joblib`,.. etc.
+2. Move all the model files into the **root directory of the project** (they must be located in the same directory of root level `server.py`).
 
-#### Building and Running the Docker Container
+After the models downloaded and placed in the correct location, you can proceed building and run the web applications as below.
 
-1. Build the Docker image:
+### 2. How to Build and Run the Applications
+For the easiest way, we provide a docker compose's file that you can up all services by follow below:
+
+1. Build and run the docker containers using docker-compose:
    ```bash
-   docker build -t amr_app .
+   docker-compose up -d --build
    ```
-2. Run the Docker container:
-   ```bash
-   docker run -p 8000:80 amr_app
-   ```
-3. Access the Web Application at `http://localhost:8000`.
+2. Access the website via at `http://localhost:8000`.
 
-### Using Docker Compose
-
-1. Build and run the Docker containers:
-   ```bash
-   docker-compose up --build
-   ```
-2. Access the Web Application at `http://localhost:8000`.
+Please see the [docker-compose.yml](./docker-compose.yml) file for more detail.
 
 ## Alternative: Running Locally without Docker
 
