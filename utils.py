@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-df = pd.read_excel('Calmette_data_v2.xlsx')
+df = pd.read_excel('dataset/antibiogram_dataset.xlsx')
 
 # df = df.applymap(lambda x: x.replace('\u200b', '') if isinstance(x, str) else x)
 df = df.replace(to_replace='\u200b', value='', regex=True)
