@@ -51,8 +51,8 @@ COPY --from=web-build /web/dist /app/web/dist
 COPY server.py server.py
 COPY dataset dataset
 COPY database.py database.py
-COPY Calmette_data_v2.xlsx Calmette_data_v2.xlsx
-COPY antibiogram_dataset.xlsx antibiogram_dataset.xlsx
+COPY ./dataset/Calmette_data.xlsx ./dataset/Calmette_data.xlsx
+COPY ./dataset/antibiogram_dataset.xlsx ./dataset/antibiogram_dataset.xlsx
 COPY utils.py utils.py
 COPY random_forest_stage_1.joblib random_forest_stage_1.joblib
 COPY random_forest_stage_2.joblib random_forest_stage_2.joblib
