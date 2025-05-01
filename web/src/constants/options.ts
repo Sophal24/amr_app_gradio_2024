@@ -302,7 +302,7 @@ export const getWardCases = (ward: string) => {
   const wardCase = wardCases.find((item) => item.values.includes(ward));
   if (!wardCase) {
     return {
-      allowedGender: [],
+      allowedGender: ['Male', 'Female'],
       allowedMinAge: 0,
     };
   }

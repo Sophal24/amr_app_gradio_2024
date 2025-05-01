@@ -1,12 +1,12 @@
-NAME=registry.gitlab.com/vin.samdy.dev/idri-registry
-TAG=amr
+NAME=registry.idri.edu.kh/amr
+TAG=latest
 IMAGE=$(NAME):$(TAG)
 
 build_prod:
-	docker build -t $(IMAGE)_prod .
+	docker build -t $(IMAGE) .
 
 push_prod:
-	docker push $(IMAGE)_prod
+	docker push $(IMAGE)
 
 release_prod:
 	make build_prod
