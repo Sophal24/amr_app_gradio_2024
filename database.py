@@ -11,7 +11,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # PostgreSQL connection details
-postgres_url = os.environ.get("POSTGRES_URL", "dbname=amr_app user=postgres password=postgres host=localhost")
+postgres_url = os.environ.get(
+    "POSTGRES_URL", "dbname=amr_app user=postgres password=postgres host=localhost"
+)
 conn = None
 
 
@@ -27,32 +29,68 @@ def connect_to_db(attempts=3, delay=5):
             time.sleep(delay)
     conn = None
 
+
+def ensure_connection():
+    """Check if connection is alive and reconnect if needed"""
+    global conn
+
+    # Check if connection is None or closed
+    if conn is None or conn.closed:
+        connect_to_db()
+        return
+
+    # Check if connection is still active with a simple query
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+            cur.fetchone()
+    except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        # Connection lost, attempt to reconnect
+        logging.info("Database connection lost. Attempting to reconnect...")
+        connect_to_db()
+
+
 connect_to_db()
 
+
 def verify_user(username, password):
+    ensure_connection()
     if conn is None:
         return None
     with conn.cursor() as cur:
-        cur.execute("SELECT id, username, password FROM users WHERE username = %s", (username,))
+        cur.execute(
+            "SELECT id, username, password FROM users WHERE username = %s", (username,)
+        )
         user_data = cur.fetchone()
-        if user_data and bcrypt.checkpw(password.encode("utf-8"), user_data[2].encode("utf-8")):
+        if user_data and bcrypt.checkpw(
+            password.encode("utf-8"), user_data[2].encode("utf-8")
+        ):
             return {"id": user_data[0], "username": user_data[1]}
     return None
 
+
 def create_user(username, password):
+    ensure_connection()
     if conn is None:
         return None
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
+        "utf-8"
+    )
     with conn.cursor() as cur:
         try:
-            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, hashed_password))
+            cur.execute(
+                "INSERT INTO users (username, password) VALUES (%s, %s)",
+                (username, hashed_password),
+            )
             conn.commit()
             return {"username": username}
         except psycopg2.IntegrityError:
             conn.rollback()
             return None  # User already exists
 
+
 def seed_users():
+    ensure_connection()
     if conn is None:
         return
     with conn.cursor() as cur:
@@ -70,7 +108,9 @@ def seed_users():
         for username, password in users:
             create_user(username, password)
 
+
 def seed_locations():
+    ensure_connection()
     if conn is None:
         return
     with conn.cursor() as cur:
@@ -89,7 +129,9 @@ def seed_locations():
             )
         conn.commit()
 
+
 def create_activity(user_id, activity):
+    ensure_connection()
     if conn is None or user_id is None:
         logging.error("Invalid user_id or database connection is not established.")
         return None
@@ -101,7 +143,9 @@ def create_activity(user_id, activity):
         conn.commit()
         return cur.fetchone()[0]
 
+
 def get_locations():
+    ensure_connection()
     if conn is None:
         return []
     with conn.cursor() as cur:
@@ -120,6 +164,7 @@ def get_locations():
 
 
 def setup_table():
+    ensure_connection()
     if conn is None:
         return
     with conn.cursor() as cur:
