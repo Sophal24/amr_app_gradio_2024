@@ -94,10 +94,6 @@ def seed_users():
     if conn is None:
         return
     with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM users LIMIT 1")
-        if cur.fetchone():
-            return
-
         users = [
             ("user@cadt", "cadt@2025"),
             ("user@uhs", "uhs@2025"),
@@ -106,7 +102,9 @@ def seed_users():
             ("user@marseille", "marseille@2025"),
         ]
         for username, password in users:
-            create_user(username, password)
+            cur.execute("SELECT 1 FROM users WHERE username = %s", (username,))
+            if not cur.fetchone():
+                create_user(username, password)
 
 
 def seed_locations():

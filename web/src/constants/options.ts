@@ -378,6 +378,10 @@ const nestedStageOptions: StageOption[] = [
             options: ['Enterobacter cloacae complex', 'Cronobacter sakazakii'],
           },
           {
+            value: 'Escherichia',
+            options: ['Escherichia coli'],
+          },
+          {
             value: 'Klebsiella',
             options: [
               'Klebsiella pneumoniae',
