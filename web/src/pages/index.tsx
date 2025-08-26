@@ -26,6 +26,24 @@ import axiosInstance from 'src/utils/axios';
 import { HELP_CONTENTS } from 'src/utils/help-contents';
 import * as XLSX from 'xlsx';
 
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+
+import CustomDialog from 'src/sections/dialog/infection_dialog';
+
+const caiContent = [
+  'Occur in individuals with NO known prior significant healthcare exposure (ex: admission to other healthcare facilities, regular contact with healthcare facilities such as dialysis, chemotherapy, or outpatient antibiotic therapy and surgical procedures), AND',
+  'Are identified within 48 to 72hours following admission to a healthcare facility, OR',
+  'Are caused by bacteria such as: Burkholderia pseudomallei, Brucella spp, Campylobacter, Salmonella, Shigella, Listeria, Vibrio and Yersinia.',
+];
+
+const haiContent = [
+  'On day 3 or after day 3 of admission, OR',
+  'Within 3 months of significant healthcare exposure (ex: admission to other healthcare facilities, regular contact with healthcare facilities such as dialysis, chemotherapy, or outpatient antibiotic therapy and surgical procedures',
+];
+
 const defaultResult = [
   { name: 'Amoxicilline', value: 0, isDefault: true },
   { name: 'Amoxicilline/Acide Clavulanique', value: 0, isDefault: true },
@@ -151,6 +169,8 @@ const HomePage = () => {
     getSliceResult(defaultResult, SLICE_COUNT)
   );
   const [availableOptions, setAvailableOptions] = useState(options);
+  const [openCai, setOpenCai] = useState(false);
+  const [openHai, setOpenHai] = useState(false);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const [feedbackFormData, setFeedbackFormData] = useState<FeedbackFormData>({
     agree: '',
@@ -158,6 +178,12 @@ const HomePage = () => {
     inputs: formData,
     results: results.flat().map((r) => ({ name: r.name, value: r.value })),
   });
+
+  const [infection, setInfection] = useState('Community-Acquired Infections (CAI)');
+
+  const handleChangeInfection = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInfection((event.target as HTMLInputElement).value);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -564,6 +590,76 @@ const HomePage = () => {
                       />
                     )}
                   />
+
+                  <FormControl
+                    sx={{
+                      flexShrink: 0,
+                      display: 'flex',
+                      mt: '-2px',
+                      width: '62%',
+                    }}
+                  >
+                    <RadioGroup
+                      aria-labelledby="infection-radio-group"
+                      name="infection-radio-group"
+                      value={infection}
+                      onChange={handleChangeInfection}
+                      sx={{ mt: -1 }}
+                    >
+                      <Grid container alignItems="center" sx={{ mb: '-14px' }}>
+                        <Grid item xs sx={{ p: 0, m: 0 }}>
+                          <FormControlLabel
+                            value="cai"
+                            control={<Radio />}
+                            label="Community-Acquired Infections (CAI)"
+                            sx={{ color: 'primary.main' }}
+                          />
+                        </Grid>
+
+                        <Grid
+                          item
+                          alignItems="center"
+                          display="flex"
+                          sx={{ p: 0, m: 0, cursor: 'pointer' }}
+                        >
+                          <IconButton onClick={() => setOpenCai(true)}>
+                            <Iconify icon="mingcute:question-fill" width={18} color="gray" />
+                          </IconButton>
+                        </Grid>
+                        <CustomDialog
+                          open={openCai}
+                          onClose={() => setOpenCai(false)}
+                          title="Community-Acquired Infections (CAI)"
+                          content={caiContent}
+                          subtitle="Define as Infections"
+                        />
+                      </Grid>
+
+                      <Grid container alignItems="center">
+                        <Grid item xs>
+                          <FormControlLabel
+                            value="hai"
+                            control={<Radio />}
+                            label="Healthcare-Associated Infections (HAI)"
+                            sx={{ color: 'primary.main' }}
+                          />
+                        </Grid>
+
+                        <Grid item alignItems="center" display="flex" sx={{ cursor: 'pointer' }}>
+                          <IconButton onClick={() => setOpenHai(true)}>
+                            <Iconify icon="mingcute:question-fill" width={18} color="gray" />
+                          </IconButton>
+                        </Grid>
+                        <CustomDialog
+                          open={openHai}
+                          onClose={() => setOpenHai(false)}
+                          title="Healthcare-Associated Infections (HAI)"
+                          content={haiContent}
+                          subtitle="Define as Infections"
+                        />
+                      </Grid>
+                    </RadioGroup>
+                  </FormControl>
                 </Box>
 
                 <Typography variant="h6" color="primary.main" gutterBottom mt={2}>
