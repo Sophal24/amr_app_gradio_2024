@@ -19,33 +19,15 @@ from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 target_labels = [
-    "Piperacilline/Tazobactam",
-    "Ceftriaxone",
-    "Amoxicilline",
-    "Meropenem",
-    "Amoxicilline/Acide Clavulanique",
-    "Cotrimoxazole",
-    "Vancomycine",
-    "Ciprofloxacine",
-    "Azithromycine",
-    "Gentamicine",
-    "Levofloxacine",
-    "Clindamycine",
-    "Amikacine",
-    "Oxacilline / Cefazoline",
-    "Ceftazidime",
-    "Cefepime",
-    "Imipenem",
-    "Fosfomycine",
-    "Ertapenem",
-    "Metronidazole",
-    "Ofloxacine",
+    "Piperacilline/Tazobactam", "Ceftriaxone", "Amoxicilline", "Meropenem", "Amoxicilline/Acide Clavulanique", "Cotrimoxazole", "Vancomycine",
+    "Ciprofloxacine", "Azithromycine", "Gentamicine", "Levofloxacine", "Clindamycine", "Amikacine", "Oxacilline / Cefazoline", "Ceftazidime", "Cefepime",
+    "Imipenem", "Fosfomycine", "Ertapenem", "Metronidazole", "Ofloxacine"
 ]
 
-df = pd.read_excel("dataset/antibiogram_dataset.xlsx")
+df = pd.read_excel('dataset/antibiogram_dataset.xlsx')
 
 # remove '\u200b'
-df = df.replace(to_replace="\u200b", value="", regex=True)
+df = df.replace(to_replace='\u200b', value='', regex=True)
 
 # # drop columns
 # df = df.drop(columns=["Hopital", "IDLabo", "IDPatient", "visittype"])
@@ -55,7 +37,9 @@ df = df.rename(columns={"new_age": "age"})
 df.columns = df.columns.str.lower()
 
 # Mapping Khmer to English using map()
-df["sex"] = df["sex"].map({"ប្រុស": "Male", "ស្រី": "Female"})
+df['sex'] = df['sex'].map({'ប្រុស': 'Male', 'ស្រី': 'Female'})
+
+df = df.replace({'hAI': 'HAI'})
 
 df_amr_field = df
 
@@ -80,9 +64,10 @@ culture_3_dict = set_label_encoding(df, "3_culture")
 genre_4_dict = set_label_encoding(df, "4_genre")
 espece_5_training_dict = set_label_encoding(df, "5_species")
 diagnosis_dict = set_label_encoding(df, "new_diagnosis")  ## add diagnosis
+infection_type_dict = set_label_encoding(df, 'infection_type') ## add infection type
 
 
-def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, culture_3, genre_4, species_5):
+def amr_project(age, sex, address, ward_en, date, diagnosis, sample, infection_type, direct_2, culture_3, genre_4, species_5):
 
     # Convert timestamp to a datetime object
     date_time = datetime.fromtimestamp(date)
@@ -91,6 +76,7 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
 
     ### Stage 5 ###
     if age and sex and address and ward_en and sample and direct_2 and culture_3 and genre_4 and species_5:
+        print('Stage 5')
 
         # Sample data
         input_data = {
@@ -101,6 +87,7 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             'ward_english': [ward_dict[ward_en]],
             'sample': [sample_dict[sample]],
             'new_diagnosis': [diagnosis_dict[diagnosis]],
+            'infection_type': [infection_type_dict[infection_type]],
             '2_direct': [direct_2_dict[direct_2]],
             '3_culture': [culture_3_dict[culture_3]],
             '4_genre': [genre_4_dict[genre_4]],
@@ -109,14 +96,18 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
         # Create the DataFrame
         df = pd.DataFrame(input_data)
 
+        # print(df)
+
         # Load the model back from the file
         rf_model_loaded = joblib.load('random_forest_stage_5.joblib')
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
         y_pred_loaded = rf_model_loaded.predict(one_row_test)
+        # print(len(y_pred_loaded[0]), np.array(y_pred_loaded))
 
         y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+        # print(len(y_pred_prob), np.array(y_pred_prob))
 
         result_class_dict = dict()
         result_probab_dict = dict()
@@ -131,6 +122,10 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             except:
                 result_probab_dict[target_labels[i]] = 0
 
+        print()
+        print(result_class_dict)
+        print(result_probab_dict)
+
         # Sample data
         data = {
             "Model": ["Random Forest - Stage 5"]
@@ -141,6 +136,7 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
 
     ### Stage 4 ###
     elif age and sex and address and ward_en and sample and direct_2 and culture_3 and genre_4:
+        print('Stage 4')
         # Sample data
         input_data = {
             "month": [month],
@@ -150,12 +146,14 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             'ward_english': [ward_dict[ward_en]],
             'sample': [sample_dict[sample]],
             'new_diagnosis': [diagnosis_dict[diagnosis]],
+            'infection_type': [infection_type_dict[infection_type]],
             '2_direct': [direct_2_dict[direct_2]],
             '3_culture': [culture_3_dict[culture_3]],
             '4_genre': [genre_4_dict[genre_4]]
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
+
         # print(df)
         # Load the model back from the file
         rf_model_loaded = joblib.load('random_forest_stage_4.joblib')
@@ -163,29 +161,39 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
 
         # Now you can use the loaded model to make predictions
         y_pred_loaded = rf_model_loaded.predict(one_row_test)
+        # print(len(y_pred_loaded[0]), np.array(y_pred_loaded))
 
         y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+        # print(len(y_pred_prob), np.array(y_pred_prob))
 
         result_class_dict = dict()
         result_probab_dict = dict()
 
         for i in range(len(target_labels)):
             message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            # print(target_labels[i], ": class - ", y_pred_loaded[0][i], message,' - Probab:', y_pred_prob[i][0][1])
             result_class_dict[target_labels[i]] = message
             # result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
             try:
                 result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
             except:
                 result_probab_dict[target_labels[i]] = 0
-         # Sample data
+
+        print()
+        print(result_class_dict)
+        print(result_probab_dict)
+
+        # Sample data
         data = {
             "Model": ["Random Forest - Stage 4"]
         }
         # Create the DataFrame
         df_info = pd.DataFrame(data)
 
+
     ### Stage 3 ###
     elif age and sex and address and ward_en and sample and direct_2 and culture_3:
+        print('Stage 3')
         # Sample data
         input_data = {
             "month": [month],
@@ -195,25 +203,31 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             'ward_english': [ward_dict[ward_en]],
             'sample': [sample_dict[sample]],
             'new_diagnosis': [diagnosis_dict[diagnosis]],
+            'infection_type': [infection_type_dict[infection_type]],
             '2_direct': [direct_2_dict[direct_2]],
             '3_culture': [culture_3_dict[culture_3]]
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
+      
+        # print(df)
         # Load the model back from the file
         rf_model_loaded = joblib.load('random_forest_stage_3.joblib')
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
         y_pred_loaded = rf_model_loaded.predict(one_row_test)
+        # print(len(y_pred_loaded[0]), np.array(y_pred_loaded))
 
         y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+        # print(len(y_pred_prob), np.array(y_pred_prob))
 
         result_class_dict = dict()
         result_probab_dict = dict()
 
         for i in range(len(target_labels)):
             message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            # print(target_labels[i], ": class - ", y_pred_loaded[0][i], message,' - Probab:', y_pred_prob[i][0][1])
             result_class_dict[target_labels[i]] = message
             # result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
             try:
@@ -221,13 +235,16 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             except:
                 result_probab_dict[target_labels[i]] = 0
 
-         # Sample data
+        print()
+        print(result_class_dict)
+        print(result_probab_dict)
+
+        # Sample data
         data = {
             "Model": ["Random Forest - Stage 3"]
         }
         # Create the DataFrame
         df_info = pd.DataFrame(data)
-
     #### Stage 2 ###
     elif age and sex and address and ward_en and sample and direct_2:
         print('Stage 2')
@@ -240,39 +257,52 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             'ward_english': [ward_dict[ward_en]],
             'sample': [sample_dict[sample]],
             'new_diagnosis': [diagnosis_dict[diagnosis]],
+            'infection_type': [infection_type_dict[infection_type]],
             '2_direct': [direct_2_dict[direct_2]]
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
+      
+        # print(df)
         # Load the model back from the file
         rf_model_loaded = joblib.load('random_forest_stage_2.joblib')
         one_row_test = df
 
         # Now you can use the loaded model to make predictions
         y_pred_loaded = rf_model_loaded.predict(one_row_test)
+        # print(len(y_pred_loaded[0]), np.array(y_pred_loaded))
 
         y_pred_prob = rf_model_loaded.predict_proba(one_row_test)
+        # print(len(y_pred_prob), np.array(y_pred_prob))
 
         result_class_dict = dict()
         result_probab_dict = dict()
 
         for i in range(len(target_labels)):
             message = "Sensible" if y_pred_loaded[0][i] == 1 else "Resistance"
+            # print(target_labels[i], ": class - ", y_pred_loaded[0][i], message,' - Probab:', y_pred_prob[i][0][1])
             result_class_dict[target_labels[i]] = message
+            # result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
             try:
                 result_probab_dict[target_labels[i]] = y_pred_prob[i][0][1]
             except:
                 result_probab_dict[target_labels[i]] = 0
 
-         # Sample data
+        print()
+        print(result_class_dict)
+        print(result_probab_dict)
+
+        # Sample data
         data = {
             "Model": ["Random Forest -  Stage 2"]
         }
         # Create the DataFrame
         df_info = pd.DataFrame(data)
+       
 
     ### Stage 1 ###
     elif age and sex and address and ward_en and sample:
+        print('Stage 1')
         # Sample data
         input_data = {
             "month": [month],
@@ -282,10 +312,12 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             'ward_english': [ward_dict[ward_en]],
             'sample': [sample_dict[sample]],
             'new_diagnosis': [diagnosis_dict[diagnosis]],
+            'infection_type': [infection_type_dict[infection_type]] 
         }
         # Create the DataFrame
         df = pd.DataFrame(input_data)
-        
+      
+
         # Load the model back from the file
         rf_model_loaded = joblib.load('random_forest_stage_1.joblib')
         one_row_test = df
@@ -309,12 +341,17 @@ def amr_project(age, sex, address, ward_en, date, diagnosis, sample, direct_2, c
             except:
                 result_probab_dict[target_labels[i]] = 0
 
-         # Model used and stage information
+        print()
+        print(result_class_dict)
+        print(result_probab_dict)
+
+        # Model used and stage information
         data = {
             "Model": ["Random Forest - Stage 1"]
         }
         # Create the DataFrame
         df_info = pd.DataFrame(data)
+       
 
     return df_info, result_probab_dict
 
@@ -377,6 +414,7 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
         genre_4 = data.get("genre_4")
         species_training_5 = data.get("species_training_5")
         diagnosis = data.get("diagnosis")
+        infection_type = data.get("infection_type")
 
         # Convert date to timestamp
         date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
@@ -399,6 +437,7 @@ def amr_api(data: dict, token: str = Depends(JWTBearer())):
             culture_3=culture_3,
             genre_4=genre_4,
             species_5=species_training_5,
+        infection_type=infection_type
         )
 
         return {"df_info": df_info.to_dict(), "result_probab_dict": result_probab_dict}

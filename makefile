@@ -1,5 +1,6 @@
 NAME=registry.idri.edu.kh/amr
-TAG=latest
+TAG=2.0.1
+# TAG=latest
 IMAGE=$(NAME):$(TAG)
 
 build_prod:
