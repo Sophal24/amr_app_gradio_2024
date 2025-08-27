@@ -1,5 +1,5 @@
 NAME=registry.idri.edu.kh/amr
-TAG=2.0.1
+TAG=2.0.2
 # TAG=latest
 IMAGE=$(NAME):$(TAG)
 

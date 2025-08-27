@@ -15,6 +15,7 @@ services:
 
   amr:
     container_name: amr
+    image: registry.idri.edu.kh/amr:2.0.3
     build:
       context: .
       dockerfile: Dockerfile
