@@ -433,7 +433,7 @@ const HomePage = () => {
                   fontSize: { xs: '1rem', md: '1.5rem' },
                 }}
               >
-                Cambodia AMR Predicting Application
+                Cambodia AMR Predicting Application (CAMPRA)
               </Typography>
               <Box flexGrow={1} />
               <Button
