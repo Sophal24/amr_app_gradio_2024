@@ -8,6 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Iconify from 'src/components/iconify';
 import { fontSize } from '@mui/system';
+import Box from '@mui/material/Box';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -32,7 +33,12 @@ const CustomDialog: FC<CustomDialogProps> = ({ open, onClose, title, content, su
       <DialogTitle
         variant="h4"
         color="primary.main"
-        sx={{ m: 0, p: 2 }}
+        sx={{
+          m: 0,
+          p: 2,
+          mt: { xs: 2, sm: 0, md: 0 },
+          mx: { xs: 2, sm: 0, md: 0 },
+        }}
         id="custom-dialog-title"
         textAlign="center"
       >
@@ -62,18 +68,21 @@ const CustomDialog: FC<CustomDialogProps> = ({ open, onClose, title, content, su
       </DialogContent>
       <DialogContent dividers>
         {Array.isArray(content) ? (
-          <ol>
+          <Box
+            component="ol"
+            sx={{
+              paddingLeft: { xs: 6, sm: 8, md: 8, lg: 8 },
+              paddingRight: { xs: 4, sm: 6, md: 6, lg: 6 },
+            }}
+          >
             {content.map((item, index) => (
-              <li
-                key={index}
-                style={{ fontSize: '14px', marginBottom: '4px', marginRight: '24px' }}
-              >
+              <li key={index} style={{ fontSize: '14px' }}>
                 <Typography textAlign="justify" variant="body2">
                   {item}
                 </Typography>
               </li>
             ))}
-          </ol>
+          </Box>
         ) : (
           <Typography>{content}</Typography>
         )}

@@ -596,35 +596,17 @@ const HomePage = () => {
                     )}
                   />
 
-                  {/* <FormControl>
-                    <RadioGroup
-                      value={formData.infection_type}
-                      onChange={(event, value) => handleChangeInfection('infection_type', value)}
-                    >
-                      <Grid container alignItems="center">
-                        <FormControlLabel value="CAI" control={<Radio />} label="Community-Acquired Infections (CAI)" />
-                        <IconButton onClick={(e) => { e.stopPropagation(); setOpenCai(true); }}>
-                          <Iconify icon="mingcute:question-fill" width={18} color="gray" />
-                        </IconButton>
-                      </Grid>
-
-                      <Grid container alignItems="center">
-                        <FormControlLabel value="HAI" control={<Radio />} label="Healthcare-Associated Infections (HAI)" />
-                        <IconButton onClick={(e) => { e.stopPropagation(); setOpenHai(true); }}>
-                          <Iconify icon="mingcute:question-fill" width={18} color="gray" />
-                        </IconButton>
-                      </Grid>
-                    </RadioGroup>
-                  </FormControl>
-
-                  <CustomDialog open={openCai} onClose={() => setOpenCai(false)} title="Community-Acquired Infections (CAI)" content={caiContent} subtitle="Defined as infections" />
-                  <CustomDialog open={openHai} onClose={() => setOpenHai(false)} title="Healthcare-Associated Infections (HAI)" content={haiContent} subtitle="Defined as infections" /> */}
                   <FormControl
                     sx={{
                       flexShrink: 0,
                       display: 'flex',
+                      justifyContent: 'space-between',
                       mt: '-2px',
-                      width: '62%',
+                      width: {
+                        xs: '100%',
+                        sm: '80%',
+                        md: '62%',
+                      },
                     }}
                   >
                     <RadioGroup
@@ -634,8 +616,14 @@ const HomePage = () => {
                       onChange={(event, value) => handleChangeInfection('infection_type', value)}
                       sx={{ mt: -1 }}
                     >
-                      <Grid container alignItems="center" sx={{ mb: '-14px' }}>
-                        <Grid item xl={8} sx={{ p: 0, m: 0 }}>
+                      <Grid
+                        container
+                        alignItems="center"
+                        sx={{ mb: '-14px' }}
+                        display="flex"
+                        justifyContent="space-between"
+                      >
+                        <Grid item xl={8} sx={{ p: 0, mr: '-6px' }}>
                           <FormControlLabel
                             value="CAI"
                             control={<Radio />}
@@ -647,18 +635,27 @@ const HomePage = () => {
                         <Grid
                           item
                           alignItems="center"
-                          display="flex"
                           sx={{ p: 0, m: 0, cursor: 'pointer' }}
+                          display="flex"
                         >
-                          <IconButton onClick={(e) => { e.stopPropagation(); setOpenCai(true); }}>
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenCai(true);
+                            }}
+                          >
                             <Iconify icon="mingcute:question-fill" width={18} color="gray" />
                           </IconButton>
                         </Grid>
-
                       </Grid>
 
-                      <Grid container alignItems="center">
-                        <Grid item xl={8} sx={{ p: 0, m: 0 }}>
+                      <Grid
+                        container
+                        alignItems="center"
+                        display="flex"
+                        justifyContent="space-between"
+                      >
+                        <Grid item xl={8} sx={{ p: 0, mr: '-24px' }}>
                           <FormControlLabel
                             value="HAI"
                             control={<Radio />}
@@ -668,16 +665,32 @@ const HomePage = () => {
                         </Grid>
 
                         <Grid item alignItems="center" display="flex" sx={{ cursor: 'pointer' }}>
-                          <IconButton onClick={(e) => { e.stopPropagation(); setOpenCai(true); }}>
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenHai(true);
+                            }}
+                          >
                             <Iconify icon="mingcute:question-fill" width={18} color="gray" />
                           </IconButton>
                         </Grid>
-
                       </Grid>
                     </RadioGroup>
                   </FormControl>
-                  <CustomDialog open={openCai} onClose={() => setOpenCai(false)} title="Community-Acquired Infections (CAI)" content={caiContent} subtitle="Defined as infections" />
-                  <CustomDialog open={openHai} onClose={() => setOpenHai(false)} title="Healthcare-Associated Infections (HAI)" content={haiContent} subtitle="Defined as infections" />
+                  <CustomDialog
+                    open={openCai}
+                    onClose={() => setOpenCai(false)}
+                    title="Community-Acquired Infections (CAI)"
+                    content={caiContent}
+                    subtitle="Defined as infections"
+                  />
+                  <CustomDialog
+                    open={openHai}
+                    onClose={() => setOpenHai(false)}
+                    title="Healthcare-Associated Infections (HAI)"
+                    content={haiContent}
+                    subtitle="Defined as infections"
+                  />
                 </Box>
 
                 <Typography variant="h6" color="primary.main" gutterBottom mt={2}>
