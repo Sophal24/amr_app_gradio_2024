@@ -431,24 +431,37 @@ const HomePage = () => {
                 variant="h5"
                 sx={{
                   fontSize: { xs: '1rem', md: '1.5rem' },
+                  textAlign: { xs: 'center', md: 'left' }
                 }}
               >
                 Cambodia AMR Predicting Application (CAMPRA)
               </Typography>
               <Box flexGrow={1} />
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ px: 6 }}
-                onClick={() => setOpenHelpDialog(true)}
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems="center"
+                sx={{ width: { xs: '100%', md: 'auto' } }}
               >
-                Help ?
-              </Button>
-              <Tooltip title="Logout">
-                <Button variant="outlined" color="error" onClick={handleLogout}>
-                  <Iconify icon="mdi:logout" width={24} />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ px: 6, width: { xs: '100%', md: 'auto' } }}
+                  onClick={() => setOpenHelpDialog(true)}
+                >
+                  Help ?
                 </Button>
-              </Tooltip>
+                <Tooltip title="Logout" sx={{ width: { xs: '100%', md: 'auto' } }}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleLogout}
+                    sx={{ width: { xs: '100%', md: 'auto' } }}
+                  >
+                    <Iconify icon="mdi:logout" width={24} />
+                  </Button>
+                </Tooltip>
+              </Stack>
             </Stack>
           </Grid>
           <Grid item xs={12}>
@@ -472,7 +485,7 @@ const HomePage = () => {
               resistance and susceptibility using patient data
             </Typography>
             <Typography variant="body2" textAlign="center">
-              and microbial information, helping combat Antimicrobial Resistance <b>(CAMPRA)</b>.
+              and microbial information, helping combat Antimicrobial Resistance
             </Typography>
           </Grid>
           {/* Input Form */}
@@ -623,7 +636,7 @@ const HomePage = () => {
                         display="flex"
                         justifyContent="space-between"
                       >
-                        <Grid item xl={8} sx={{ p: 0, mr: '-6px' }}>
+                        <Grid item xl={6} sx={{ p: 0, mr: '-6px' }}>
                           <FormControlLabel
                             value="CAI"
                             control={<Radio />}
@@ -634,6 +647,7 @@ const HomePage = () => {
 
                         <Grid
                           item
+                          xl={6}
                           alignItems="center"
                           sx={{ p: 0, m: 0, cursor: 'pointer' }}
                           display="flex"
@@ -655,7 +669,7 @@ const HomePage = () => {
                         display="flex"
                         justifyContent="space-between"
                       >
-                        <Grid item xl={8} sx={{ p: 0, mr: '-24px' }}>
+                        <Grid item xl={6} sx={{ p: 0, mr: '-6px' }} >
                           <FormControlLabel
                             value="HAI"
                             control={<Radio />}
@@ -664,7 +678,7 @@ const HomePage = () => {
                           />
                         </Grid>
 
-                        <Grid item alignItems="center" display="flex" sx={{ cursor: 'pointer' }}>
+                        <Grid item xl={6} alignItems="center" display="flex" sx={{ cursor: 'pointer' }}>
                           <IconButton
                             onClick={(e) => {
                               e.stopPropagation();
@@ -839,20 +853,30 @@ const HomePage = () => {
           {/* Results Panel */}
           {tab === 'result' && (
             <Grid item xs={12}>
-              <Stack direction="row" spacing={2} mb={2} alignItems="center">
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                mb={2}
+                alignItems="center"
+                sx={{ width: { xs: '100%', md: 'auto' } }}
+              >
                 <Typography variant="h6" color="primary.main">
                   Antibiotic Sensitivity Results
                 </Typography>
-                <Box flex={1} />
+                <Box flex={1} sx={{ display: { xs: 'none', md: 'block' } }} />
                 <Button
                   variant="outlined"
-                  sx={{ px: 6 }}
+                  sx={{ px: 6, width: { xs: '100%', md: 'auto' } }}
                   onClick={handleExport}
                   disabled={results.flat().some((r) => r.isDefault)}
                 >
                   Export
                 </Button>
-                <Button variant="contained" sx={{ px: 6 }} onClick={() => setTab('input')}>
+                <Button
+                  variant="contained"
+                  sx={{ px: 6, width: { xs: '100%', md: 'auto' } }}
+                  onClick={() => setTab('input')}
+                >
                   Input Form
                 </Button>
               </Stack>

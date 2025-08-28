@@ -6,6 +6,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
 import Iconify from 'src/components/iconify';
 import { fontSize } from '@mui/system';
 import Box from '@mui/material/Box';
@@ -42,19 +43,22 @@ const CustomDialog: FC<CustomDialogProps> = ({ open, onClose, title, content, su
         id="custom-dialog-title"
         textAlign="center"
       >
-        {title}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          <Iconify icon="material-symbols:close-rounded" width={24} color="primary.main" />
-        </IconButton>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Box flexGrow={1} display="flex" justifyContent="center" alignItems="center">
+            <Typography variant="h4" component="div" fontWeight="bold" fontSize={{ xs: 20, sm: 24, md: 24 }}>
+              {title}
+            </Typography>
+          </Box>
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={(theme) => ({
+              color: theme.palette.grey[500],
+            })}
+          >
+            <Iconify icon="material-symbols:close-rounded" width={24} color="primary.main" />
+          </IconButton>
+        </Stack>
       </DialogTitle>
       <DialogContent
         sx={{
@@ -71,6 +75,8 @@ const CustomDialog: FC<CustomDialogProps> = ({ open, onClose, title, content, su
           <Box
             component="ol"
             sx={{
+              margin: 0,
+              paddingBottom: 2,
               paddingLeft: { xs: 6, sm: 8, md: 8, lg: 8 },
               paddingRight: { xs: 4, sm: 6, md: 6, lg: 6 },
             }}
