@@ -629,66 +629,48 @@ const HomePage = () => {
                       onChange={(event, value) => handleChangeInfection('infection_type', value)}
                       sx={{ mt: -1 }}
                     >
-                      <Grid
-                        container
-                        alignItems="center"
-                        sx={{ mb: '-14px' }}
-                        display="flex"
-                        justifyContent="space-between"
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: 'max-content max-content',
+                          alignItems: 'center',
+                          columnGap: 0.5,
+                          rowGap: 0,
+                        }}
                       >
-                        <Grid item xl={6} sx={{ p: 0, mr: '-6px' }}>
-                          <FormControlLabel
-                            value="CAI"
-                            control={<Radio />}
-                            label="Community-Acquired Infections (CAI)"
-                            sx={{ color: 'primary.main' }}
-                          />
-                        </Grid>
-
-                        <Grid
-                          item
-                          xl={6}
-                          alignItems="center"
-                          sx={{ p: 0, m: 0, cursor: 'pointer' }}
-                          display="flex"
+                        <FormControlLabel
+                          value="CAI"
+                          control={<Radio />}
+                          label="Community-Acquired Infections (CAI)"
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCai(true);
+                          }}
+                          size="small"
                         >
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenCai(true);
-                            }}
-                          >
-                            <Iconify icon="mingcute:question-fill" width={18} color="gray" />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
+                          <Iconify icon="mingcute:question-fill" width={18} color="gray" />
+                        </IconButton>
+                        <FormControlLabel
+                          value="HAI"
+                          control={<Radio />}
+                          label="Healthcare-Associated Infections (HAI)"
+                          sx={{ color: 'primary.main' ,mt: -1.5}}
 
-                      <Grid
-                        container
-                        alignItems="center"
-                        display="flex"
-                        justifyContent="space-between"
-                      >
-                        <Grid item xl={6} sx={{ p: 0, mr: '-6px' }} >
-                          <FormControlLabel
-                            value="HAI"
-                            control={<Radio />}
-                            label="Healthcare-Associated Infections (HAI)"
-                            sx={{ color: 'primary.main' }}
-                          />
-                        </Grid>
-
-                        <Grid item xl={6} alignItems="center" display="flex" sx={{ cursor: 'pointer' }}>
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenHai(true);
-                            }}
-                          >
-                            <Iconify icon="mingcute:question-fill" width={18} color="gray" />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
+                        />
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenHai(true);
+                          }}
+                          size="small"
+                          sx={{ mt: -1.5 }} 
+                        >
+                          <Iconify icon="mingcute:question-fill" width={18} color="gray" />
+                        </IconButton>
+                      </Box>
                     </RadioGroup>
                   </FormControl>
                   <CustomDialog
